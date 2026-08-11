@@ -1,0 +1,643 @@
+{% extends "base.html" %}
+{% block title %}Caja y Facturación - Virgen de Chapi{% endblock %}
+{% block active_caja %}active{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    /* ==========================================================================
+       DISEÑO UI/UX VIBRANTE Y MODERNO (ESTILO DASHBOARD FINANCIERO 2024)
+       ========================================================================== */
+    body { background-color: #f4f7fe; } 
+    
+    .page-header { margin-bottom: 2.5rem; }
+    
+    /* TARJETAS KPI (VIBRANTES) */
+    .kpi-card { 
+        background: #ffffff; border: none; border-radius: 24px; padding: 2rem; 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.03); display: flex; align-items: center; 
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s;
+        position: relative; overflow: hidden; height: 100%;
+    }
+    .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 15px 50px rgba(0,0,0,0.07); }
+    
+    .icon-box { 
+        width: 70px; height: 70px; border-radius: 20px; display: flex; 
+        align-items: center; justify-content: center; font-size: 2.2rem; 
+        margin-right: 1.5rem; color: white; flex-shrink: 0;
+    }
+    .icon-warning { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3); }
+    .icon-success { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3); }
+    
+    .grid-container { 
+        background: #ffffff; border: none; border-radius: 24px; 
+        box-shadow: 0 15px 50px rgba(0,0,0,0.04); overflow: hidden; padding: 1rem;
+    }
+    
+    .tabs-wrapper { padding: 1rem; border-bottom: 2px dashed #f1f5f9; margin-bottom: 1rem; }
+    .filter-tabs { background: #f1f5f9; padding: 0.5rem; border-radius: 20px; display: inline-flex; gap: 0.5rem; flex-wrap: wrap; }
+    .nav-btn { 
+        background: transparent; border: none; color: #64748b; font-weight: 800; 
+        font-size: 0.95rem; padding: 0.8rem 1.8rem; border-radius: 16px; transition: all 0.3s ease; 
+    }
+    .nav-btn:hover { color: #334155; background: rgba(255,255,255,0.5); }
+    .nav-btn.active { background: #ffffff; color: #2563eb; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    
+    .table > :not(caption) > * > * { padding: 1.5rem 1rem; vertical-align: middle; border-bottom-color: #f8fafc; }
+    .table-hover tbody tr { transition: background-color 0.2s, transform 0.2s; }
+    .table-hover tbody tr:hover { background-color: #ffffff; transform: scale(1.005); box-shadow: 0 5px 15px rgba(0,0,0,0.02); border-radius: 16px; }
+    
+    .text-money { font-family: 'Courier New', Courier, monospace; font-weight: 900; letter-spacing: -0.5px; }
+    .hover-lift { transition: all 0.3s ease; }
+    .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important; }
+    
+    .empty-state-icon { font-size: 4rem; margin-bottom: 1rem; display: inline-block; }
+    .empty-success { color: #10b981; animation: float 3s ease-in-out infinite; }
+    @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+</style>
+
+<div id="chartDataContainer" class="d-none" data-ventas='[
+    {%- set ns = namespace(is_first=true) -%}
+    {%- for c in cobrados_hoy -%}
+        {%- if c.estado != "anulado" -%}
+            {%- if not ns.is_first -%},{%- endif -%}
+            {"hora": "{{ c.fecha_pago.strftime("%H:00") if c.fecha_pago else "12:00" }}", "total": {{ c.monto_total }}}
+            {%- set ns.is_first = false -%}
+        {%- endif -%}
+    {%- endfor -%}
+]'></div>
+
+<div class="container-fluid py-4 animate__animated animate__fadeIn">
+
+    <div class="d-flex justify-content-between align-items-center page-header mb-4">
+        <div>
+            <h2 class="fw-black text-dark m-0" style="font-size: 2.2rem;"><i class="bi bi-wallet2 text-primary me-3"></i>Centro de Control Financiero</h2>
+            <p class="text-muted fw-bold mt-1 mb-0 fs-6">Gestión de cobros, auditoría de ingresos y facturación electrónica.</p>
+        </div>
+        
+        <a href="/caja/cierre" class="btn btn-danger btn-lg fw-bold shadow hover-lift rounded-pill px-4" style="background: linear-gradient(135deg, #ef4444, #b91c1c); border: none;">
+            <i class="bi bi-lock-fill me-2"></i>Cerrar Caja Z
+        </a>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="kpi-card flex-column align-items-start justify-content-center p-4">
+                <div class="d-flex align-items-center w-100 mb-3">
+                    <div class="icon-box icon-warning" style="width: 50px; height: 50px; font-size: 1.5rem;"><i class="bi bi-hourglass-split"></i></div>
+                    <h6 class="text-muted m-0 fw-black text-uppercase" style="letter-spacing: 1px; font-size: 0.75rem;">Por Cobrar</h6>
+                </div>
+                <h2 class="m-0 fw-black text-dark" style="font-size: 2.5rem;">{{ por_cobrar|length }} <span class="fs-6 text-muted fw-bold">Órdenes</span></h2>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="kpi-card flex-column align-items-start justify-content-center p-4">
+                <div class="d-flex align-items-center w-100 mb-3">
+                    <div class="icon-box icon-success" style="width: 50px; height: 50px; font-size: 1.5rem;"><i class="bi bi-receipt"></i></div>
+                    <h6 class="text-muted m-0 fw-black text-uppercase" style="letter-spacing: 1px; font-size: 0.75rem;">Cobrados Hoy</h6>
+                </div>
+                <h2 class="m-0 fw-black text-dark" style="font-size: 2.5rem;">{{ cobrados_hoy|length }} <span class="fs-6 text-muted fw-bold">Tickets</span></h2>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="kpi-card p-3">
+                <div class="w-100 h-100">
+                    <canvas id="graficoVentas" height="90"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-container">
+        
+        <div class="tabs-wrapper text-center text-md-start">
+            <div class="filter-tabs">
+                <button class="nav-btn active" onclick="mostrarPestana('pendientes', this)">
+                    <i class="bi bi-bell-fill me-2 text-warning"></i>Pendientes de Pago
+                </button>
+                <button class="nav-btn" onclick="mostrarPestana('historial', this)">
+                    <i class="bi bi-check-circle-fill me-2 text-success"></i>Auditoría de Ventas
+                </button>
+                
+                {% if session.user_rol == 'admin' %}
+                <button class="nav-btn" onclick="mostrarPestana('supervision', this)">
+                    <i class="bi bi-shield-lock-fill me-2 text-primary"></i>Supervisión de Turnos
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div id="tabla_pendientes" class="table-responsive px-3 pb-3">
+            <table class="table table-hover border-0 align-middle">
+                <thead class="text-muted small fw-black text-uppercase" style="letter-spacing: 1px;">
+                    <tr>
+                        <th class="border-0">Referencia</th>
+                        <th class="border-0">Propietario / Cliente</th>
+                        <th class="border-0">Vehículo</th>
+                        <th class="border-0 text-end">Total a Pagar</th>
+                        <th class="border-0 text-center">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in por_cobrar %}
+                    <tr>
+                        <td>
+                            <div class="badge bg-dark text-white rounded-pill px-3 py-2 fw-bold fs-6 shadow-sm">
+                                OT-{{ "%04d"|format(p.id) }}
+                            </div>
+                            <small class="d-block mt-2 text-muted fw-bold"><i class="bi bi-calendar3 me-1"></i>{{ p.fecha_ingreso.strftime('%d/%m %H:%M') if p.fecha_ingreso else '' }}</small>
+                        </td>
+                        <td><div class="fw-black text-dark fs-6">{{ p.cliente }}</div></td>
+                        <td>
+                            <span class="d-block fw-black text-primary fs-6">{{ p.placa }}</span>
+                            <small class="text-muted fw-bold">{{ p.modelo }}</small>
+                        </td>
+                        <td class="text-end">
+                            <span class="text-money fs-4 text-dark bg-light px-3 py-2 rounded-3 border">S/ {{ "%.2f"|format(p.total_pagar) if p.total_pagar else "0.00" }}</span>
+                        </td>
+                        <td class="text-center">
+                            <a href="/caja/cobrar/{{ p.id }}" class="btn btn-success btn-lg rounded-pill px-4 fw-black shadow hover-lift" style="background: linear-gradient(135deg, #10b981, #059669); border: none;">
+                                <i class="bi bi-cash-coin me-2"></i>Cobrar Caja
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="empty-state-icon empty-success"><i class="bi bi-emoji-sunglasses"></i></div>
+                            <h4 class="fw-black text-dark">¡Todo al día y limpio!</h4>
+                            <p class="text-muted fw-bold fs-6">No hay clientes esperando para pagar en este momento.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div id="tabla_historial" class="px-3 pb-3" style="display: none;">
+            
+            <div class="d-flex flex-wrap justify-content-between align-items-center p-3 mb-4 bg-light rounded-4 border">
+                <div class="d-flex align-items-center mb-2 mb-md-0">
+                    <i class="bi bi-calendar-range text-primary fs-4 me-2"></i>
+                    <h5 class="fw-black text-dark m-0">Filtro de Auditoría</h5>
+                </div>
+                <!-- NUEVO FILTRO POR RANGO DE FECHAS -->
+                <form action="/caja" method="GET" class="d-flex gap-2 align-items-center m-0">
+                    <!-- Para que se mantenga abierta la pestaña de Auditoría al recargar -->
+                    <input type="hidden" name="tab" value="historial">
+                    
+                    <input type="date" name="fecha_inicio" class="form-control rounded-pill fw-bold border-secondary border-opacity-25" value="{{ request.args.get('fecha_inicio', '') }}" required>
+                    <span class="fw-bold text-muted">a</span>
+                    <input type="date" name="fecha_fin" class="form-control rounded-pill fw-bold border-secondary border-opacity-25" value="{{ request.args.get('fecha_fin', '') }}" required>
+                    
+                    <button type="submit" class="btn btn-primary rounded-pill fw-bold shadow-sm hover-lift px-3" title="Filtrar">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <a href="/caja?tab=historial" class="btn btn-light border rounded-pill fw-bold shadow-sm hover-lift px-3" title="Limpiar Filtro">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </a>
+                    
+                    <button type="button" class="btn btn-success rounded-pill fw-bold shadow-sm hover-lift px-4" onclick="descargarExcelVentas()">
+    <i class="bi bi-file-earmark-excel-fill me-2"></i>Exportar Excel
+</button>
+
+<script>
+// Pon esta función al final de tu archivo HTML
+function descargarExcelVentas() {
+    // Capturamos las fechas que están en el filtro
+    const fechaInicio = document.querySelector('input[name="fecha_inicio"]').value;
+    const fechaFin = document.querySelector('input[name="fecha_fin"]').value;
+    
+    // Armamos la URL apuntando a nuestra nueva y hermosa función de Python
+    let url = '/exportar_ventas_excel?';
+    if(fechaInicio && fechaFin) {
+        url += `fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+    }
+    
+    // Redirigimos para descargar el archivo
+    window.location.href = url;
+}
+</script>
+                </form>
+                <!-- FIN NUEVO FILTRO -->
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover border-0 align-middle" id="tabla_historial_datos">
+                    <thead class="text-muted small fw-black text-uppercase" style="letter-spacing: 1px;">
+                        <tr>
+                            <th class="border-0">Fecha y Hora</th>
+                            <th class="border-0">Comprobante</th>
+                            <th class="border-0">Cliente</th>
+                            <th class="border-0 text-end">Monto Total</th>
+                            <th class="border-0 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="body_historial">
+                        {% for c in cobrados_hoy %}
+                        <tr data-fecha="{{ c.fecha_pago.strftime('%Y-%m-%d') if c.fecha_pago else '' }}" class="{% if c.estado == 'anulado' %}opacity-50{% endif %}">
+                            <td>
+                                <div class="fw-bold text-dark"><i class="bi bi-calendar me-1"></i>{{ c.fecha_pago.strftime('%d/%m/%Y') if c.fecha_pago else 'Hoy' }}</div>
+                                <div class="small text-muted"><i class="bi bi-clock me-1"></i>{{ c.fecha_pago.strftime('%I:%M %p') if c.fecha_pago else '--:--' }}</div>
+                            </td>
+                            <td>
+                                <span class="fw-black text-dark fs-6 d-block" {% if c.estado == 'anulado' %}style="text-decoration: line-through;"{% endif %}>{{ c.comprobante }}</span>
+                                <span class="badge {% if c.estado == 'anulado' %}bg-danger{% else %}bg-primary{% endif %} rounded-pill px-2 py-1 fw-bold mt-1" style="font-size: 0.7rem;">
+                                    {{ c.tipo_comprobante | upper }} {% if c.estado == 'anulado' %} (ANULADO) {% endif %}
+                                </span>
+                            </td>
+                            <td><div class="fw-bold text-dark">{{ c.cliente }}</div></td>
+                            <td class="text-end">
+                                <span class="text-money {% if c.estado == 'anulado' %}text-danger{% else %}text-success{% endif %} fw-black fs-5">S/ {{ "%.2f"|format(c.monto_total) }}</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    
+                                    <button type="button" class="btn text-white rounded-pill px-3 fw-bold shadow-sm hover-lift" style="background-color: #0dcaf0; border-color: #0dcaf0;" 
+                                            onclick="verDetallesVenta('{{ c.pago_id }}', '{{ c.comprobante }}', '{{ c.cliente }}')" title="Ver Detalles">
+                                        <i class="bi bi-eye-fill"></i>
+                                    </button>
+
+                                    <a href="/caja/comprobante/{{ c.pago_id }}" class="btn btn-primary rounded-pill px-3 fw-bold shadow-sm hover-lift" target="_blank" title="Descargar A4">
+                                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                                    </a>
+                                    <a href="/caja/ticket/{{ c.pago_id }}" class="btn btn-dark rounded-pill px-3 fw-bold shadow-sm hover-lift" target="_blank" title="Imprimir Ticket">
+                                        <i class="bi bi-receipt"></i>
+                                    </a>
+                                    
+                                    {% if session.user_rol == 'admin' and c.estado != 'anulado' %}
+                                    <button type="button" class="btn btn-danger rounded-pill px-3 fw-bold shadow-sm hover-lift" 
+                                            data-id="{{ c.pago_id }}" 
+                                            data-comprobante="{{ c.comprobante }}" 
+                                            onclick="abrirModalAnular(this.dataset.id, this.dataset.comprobante)" 
+                                            title="Anular Comprobante">
+                                        <i class="bi bi-x-octagon-fill"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="empty-state-icon text-muted opacity-50"><i class="bi bi-inbox"></i></div>
+                                <h5 class="fw-black text-dark">Sin registros</h5>
+                                <p class="text-muted fw-bold">Aún no se han registrado pagos que coincidan con la búsqueda.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if session.user_rol == 'admin' %}
+        <div id="tabla_supervision" class="table-responsive px-3 pb-3" style="display: none;">
+            <table class="table table-hover border-0 align-middle">
+                <thead class="text-muted small fw-black text-uppercase" style="letter-spacing: 1px;">
+                    <tr>
+                        <th class="border-0">Personal en Turno</th>
+                        <th class="border-0">Hora Apertura</th>
+                        <th class="border-0">Fondo Inicial</th>
+                        <th class="border-0 text-center">Estado de Caja</th>
+                        <th class="border-0 text-center">Salvavidas Admin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in cajas_supervision %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                                    <i class="bi bi-person-fill fs-4"></i>
+                                </div>
+                                <div class="fw-black text-dark fs-6">{{ c.cajero }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark">
+                                <i class="bi bi-calendar3 text-primary me-1"></i> {{ c.fecha_apertura.strftime('%d/%m/%Y') }}
+                            </div>
+                            <div class="small text-muted mt-1">
+                                <i class="bi bi-clock-fill me-1"></i> {{ c.fecha_apertura.strftime('%I:%M %p') }}
+                            </div>
+                        </td>
+                        <td><span class="text-money text-dark fs-5 fw-bold bg-light px-3 py-1 rounded-3">S/ {{ "%.2f"|format(c.monto_inicial) }}</span></td>
+                        <td class="text-center">
+                            {% if c.estado == 'abierta' %}
+                                <span class="badge bg-success px-4 py-2 rounded-pill shadow-sm fs-6"><i class="bi bi-unlock-fill me-1"></i> EN CURSO</span>
+                            {% else %}
+                                <span class="badge bg-danger px-4 py-2 rounded-pill shadow-sm fs-6"><i class="bi bi-lock-fill me-1"></i> CERRADA</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if c.estado == 'cerrada' %}
+                            <form action="{{ url_for('reabrir_caja', sesion_id=c.id) }}" method="POST" class="d-inline" onsubmit="return confirm('⚠️ ¿Está seguro de REABRIR esta sesión de caja? Quedará registrado en Auditoría.');">
+                                <button type="submit" class="btn btn-warning rounded-pill px-4 fw-black shadow-sm hover-lift text-dark" title="Reabrir Turno">
+                                    <i class="bi bi-key-fill me-1"></i> Reabrir
+                                </button>
+                            </form>
+                            {% else %}
+                                <span class="badge bg-light text-muted border px-3 py-2 fw-bold">Turno Activo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted fw-bold fs-5">No hay cajeros operando registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<div class="modal fade" id="modalDetallesVenta" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
+            <div class="modal-header bg-light border-0" style="border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 1.5rem;">
+                <div>
+                    <h5 class="modal-title m-0 fw-black text-dark"><i class="bi bi-bag-check-fill text-success me-2"></i>Detalle de la Venta</h5>
+                    <small class="text-muted fw-bold" id="modal-venta-subtitle">Cargando...</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                
+                <div id="loader-venta" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted fw-bold">Cargando detalle del comprobante...</p>
+                </div>
+
+                <div class="d-none" id="contenido-venta">
+                    <div class="table-responsive bg-white rounded-4 shadow-sm border border-secondary border-opacity-10 mb-4">
+                        <table class="table table-hover border-0 align-middle mb-0">
+                            <thead class="bg-light text-muted small text-uppercase fw-black">
+                                <tr>
+                                    <th class="ps-4 border-0">Ítem / Repuesto / Servicio</th>
+                                    <th class="text-center border-0">Cant.</th>
+                                    <th class="text-end border-0">P. Unit</th>
+                                    <th class="text-end pe-4 border-0">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-venta" class="fw-bold text-dark">
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row bg-light rounded-4 p-4">
+                        <div class="col-md-6 border-end">
+                            <span class="d-block small text-muted fw-black text-uppercase mb-1">Método de Pago</span>
+                            <span class="badge bg-primary fs-6 fw-bold text-white px-3 py-2 rounded-pill" id="modal-venta-metodo">---</span>
+                        </div>
+                        <div class="col-md-6 ps-md-4">
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span class="text-muted fw-bold">OP. GRAVADA (Subtotal):</span>
+                                <span class="fw-bold text-dark">S/ <span id="modal-venta-subtotal">0.00</span></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3 small">
+                                <span class="text-muted fw-bold">I.G.V (18%):</span>
+                                <span class="fw-bold text-dark">S/ <span id="modal-venta-igv">0.00</span></span>
+                            </div>
+                            <div class="d-flex justify-content-between border-top border-secondary border-opacity-25 pt-3">
+                                <span class="fw-black text-dark" style="font-size: 1.2rem;">TOTAL FACTURADO:</span>
+                                <span class="text-money text-success fs-3">S/ <span id="modal-venta-total">0.00</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer border-0 p-4">
+                <button type="button" class="btn btn-light border fw-bold px-4 py-2 rounded-pill hover-lift" data-bs-dismiss="modal">Cerrar Detalle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAnular" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
+            <div class="modal-body text-center p-5">
+                <div class="d-inline-flex align-items-center justify-content-center bg-danger text-white rounded-circle mb-4 shadow" style="width: 90px; height: 90px;">
+                    <i class="bi bi-shield-exclamation" style="font-size: 3.5rem;"></i>
+                </div>
+                <h2 class="fw-black text-dark mb-3">Auditoría de Extorno</h2>
+                <p class="text-muted mb-4 fs-6">
+                    ¿Estás seguro de anular el comprobante <strong id="texto_comprobante" class="text-danger fs-5 d-inline-block mt-1 bg-danger bg-opacity-10 px-3 py-1 rounded-pill"></strong>? <br><br>
+                    <span class="small bg-light border p-3 rounded-4 d-block mt-2 text-start text-dark fw-bold">
+                        <i class="bi bi-info-circle-fill text-danger me-1"></i> Esta acción registrará una salida de dinero y devolverá la Orden a Pendientes.
+                    </span>
+                </p>
+                <form method="POST" id="formAnular">
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <button type="button" class="btn btn-light border fw-bold px-4 py-3 rounded-pill text-secondary hover-lift" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger fw-black px-4 py-3 rounded-pill shadow hover-lift" id="btnConfirmarAnular">
+                            <i class="bi bi-check-circle-fill me-2"></i> Confirmar Extorno
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. LÓGICA DE PESTAÑAS
+    function mostrarPestana(id, btn) {
+        document.querySelectorAll('.filter-tabs .nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tabla_pendientes').style.display = 'none';
+        document.getElementById('tabla_historial').style.display = 'none';
+        
+        let supervision = document.getElementById('tabla_supervision');
+        if(supervision) supervision.style.display = 'none';
+        
+        document.getElementById('tabla_' + id).style.display = 'block';
+    }
+
+    // 2. LÓGICA DEL FILTRO DE FECHAS
+    function filtrarPorFecha() {
+        const fecha = document.getElementById('fecha_filtro').value;
+        const filas = document.querySelectorAll('#body_historial tr');
+        filas.forEach(fila => {
+            const fechaFila = fila.getAttribute('data-fecha');
+            fila.style.display = (fecha === "" || fechaFila === fecha) ? "" : "none";
+        });
+    }
+
+    // 3. EXPORTAR A EXCEL (CSV) AUTOMÁTICO
+    function exportarExcel(tableID, filename = '') {
+        let downloadLink;
+        let csv = [];
+        let rows = document.querySelectorAll(`#${tableID} tr`);
+        
+        for (let i = 0; i < rows.length; i++) {
+            if (rows[i].style.display !== "none") {
+                let row = [], cols = rows[i].querySelectorAll("td, th");
+                let colCount = (i === 0) ? cols.length - 1 : cols.length - 1; 
+                for (let j = 0; j < colCount; j++) {
+                    let text = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
+                    row.push('"' + text + '"');
+                }
+                csv.push(row.join(","));
+            }
+        }
+
+        let csvFile = new Blob([csv.join("\n")], {type: "text/csv;charset=utf-8;"});
+        downloadLink = document.createElement("a");
+        downloadLink.download = filename + ".csv";
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+    }
+
+    // 4. LÓGICA MODAL ANULAR
+    function abrirModalAnular(pagoId, comprobante) {
+        document.getElementById('texto_comprobante').innerText = comprobante;
+        document.getElementById('formAnular').action = '/caja/anular/' + pagoId;
+        var myModal = new bootstrap.Modal(document.getElementById('modalAnular'));
+        myModal.show();
+    }
+
+    document.getElementById('formAnular').addEventListener('submit', function() {
+        const btn = document.getElementById('btnConfirmarAnular');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Procesando...';
+        btn.classList.add('disabled');
+    });
+
+    // 5. MAGIA AJAX: Función para traer los detalles de la venta al Ojito
+    async function verDetallesVenta(pagoId, comprobante, cliente) {
+        const modal = new bootstrap.Modal(document.getElementById('modalDetallesVenta'));
+        document.getElementById('modal-venta-subtitle').innerText = `Comp: ${comprobante} | Cliente: ${cliente}`;
+        
+        document.getElementById('loader-venta').classList.remove('d-none');
+        document.getElementById('contenido-venta').classList.add('d-none');
+        document.getElementById('tbody-venta').innerHTML = '';
+        
+        modal.show();
+
+        try {
+            const response = await fetch(`/api/ventas/${pagoId}/detalles`);
+            const data = await response.json();
+
+            if (data.error) throw new Error(data.error);
+
+            let html = '';
+            data.items.forEach(d => {
+                html += `
+                    <tr>
+                        <td class="ps-4">
+                            <span class="d-block text-dark">${d.nombre}</span>
+                            <small class="text-muted font-monospace">${d.codigo || 'S/C'}</small>
+                        </td>
+                        <td class="text-center"><span class="badge bg-secondary rounded-pill">${d.cantidad}</span></td>
+                        <td class="text-end text-muted">S/ ${parseFloat(d.precio).toFixed(2)}</td>
+                        <td class="text-end text-success pe-4 fw-black">S/ ${parseFloat(d.subtotal).toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tbody-venta').innerHTML = html;
+
+            document.getElementById('modal-venta-metodo').innerText = data.resumen.metodo_pago.toUpperCase();
+            document.getElementById('modal-venta-subtotal').innerText = parseFloat(data.resumen.subtotal).toFixed(2);
+            document.getElementById('modal-venta-igv').innerText = parseFloat(data.resumen.igv).toFixed(2);
+            document.getElementById('modal-venta-total').innerText = parseFloat(data.resumen.total).toFixed(2);
+            
+            document.getElementById('loader-venta').classList.add('d-none');
+            document.getElementById('contenido-venta').classList.remove('d-none');
+
+        } catch (error) {
+            console.error("Error:", error);
+            document.getElementById('loader-venta').innerHTML = `<i class="bi bi-x-circle text-danger fs-1"></i><p class="mt-2 text-danger fw-bold">Error al cargar datos.</p>`;
+        }
+    }
+
+    // 6. INICIALIZAR GRÁFICO CHART.JS (SOLUCIONADO EL ERROR DE VS CODE)
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('graficoVentas');
+        const dataContainer = document.getElementById('chartDataContainer');
+        
+        let ventasBrutas = [];
+        try {
+            ventasBrutas = JSON.parse(dataContainer.getAttribute('data-ventas'));
+        } catch (e) {
+            console.error("Error cargando datos del gráfico", e);
+        }
+
+        // Agrupar ventas por hora
+        let datosAgrupados = {};
+        ventasBrutas.forEach(v => {
+            if(!datosAgrupados[v.hora]) datosAgrupados[v.hora] = 0;
+            datosAgrupados[v.hora] += parseFloat(v.total);
+        });
+
+        // Ordenar las horas
+        let etiquetas = Object.keys(datosAgrupados).sort();
+        let valores = etiquetas.map(hora => datosAgrupados[hora]);
+
+        // Si no hay datos de ventas en este momento
+        if(etiquetas.length === 0) {
+            etiquetas = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'];
+            valores = [0, 0, 0, 0, 0, 0];
+        }
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: etiquetas,
+                datasets: [{
+                    label: 'Ingresos por Hora (S/)',
+                    data: valores,
+                    backgroundColor: 'rgba(37, 99, 235, 0.8)',
+                    borderRadius: 8,
+                    barThickness: 20
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) { return 'S/ ' + context.parsed.y.toFixed(2); }
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, display: false },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    });
+
+// =========================================================================
+    // MANTENER PESTAÑA ABIERTA DESPUÉS DE FILTRAR (UX MEJORADO)
+    // =========================================================================
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Leemos la URL para ver si venimos de hacer un filtro
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // 2. Si la URL dice '?tab=historial', forzamos a que se abra esa pestaña
+        if(urlParams.get('tab') === 'historial') {
+            // Buscamos el botón de la pestaña Historial (suele ser el segundo botón de las tabs)
+            const btnHistorial = document.querySelectorAll('.nav-btn')[1]; 
+            
+            if(btnHistorial) {
+                // Llamamos a tu función nativa para cambiar de pestaña
+                mostrarPestana('historial', btnHistorial);
+            }
+        }
+    });
+
+</script>
+{% endblock %}

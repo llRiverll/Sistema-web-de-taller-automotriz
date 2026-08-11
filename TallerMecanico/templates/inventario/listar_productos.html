@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% block title %}Catálogo - Virgen de Chapi{% endblock %}
+{% block active_inv %}active{% endblock %}
+
+{% block content %}
+<style>
+    /* Diseño Nativo "SaaS Data Grid" */
+    .page-header { margin-bottom: 2rem; }
+    
+    /* Tarjetas de KPI Minimalistas */
+    .kpi-card { background: #fff; border: 1px solid #dfe3e8; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; align-items: center; transition: all 0.2s; }
+    .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.05); }
+    .kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-right: 1rem; }
+    
+    /* Contenedor Principal de la Tabla */
+    .grid-container { background: #fff; border: 1px solid #dfe3e8; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow: hidden; }
+    
+    /* Pestañas de Filtro Suaves */
+    .filter-tabs { display: flex; gap: 0.5rem; padding: 1rem 1.5rem; border-bottom: 1px solid #dfe3e8; background: #fdfdfd; }
+    .filter-tabs .nav-btn { background: transparent; border: none; color: #637381; font-weight: 600; padding: 6px 16px; border-radius: 8px; font-size: 0.9rem; transition: all 0.2s; }
+    .filter-tabs .nav-btn:hover { background: #f4f6f8; color: #212b36; }
+    .filter-tabs .nav-btn.active { background: #fff; color: #212b36; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #dfe3e8; }
+
+    /* Estilos de Tabla Premium */
+    .table-custom { margin: 0; width: 100%; }
+    .table-custom thead th { background: #f9fafb; color: #637381; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 24px; border-bottom: 1px solid #dfe3e8; border-top: none; font-weight: 700; }
+    .table-custom tbody td { padding: 16px 24px; vertical-align: middle; border-bottom: 1px solid #f4f6f8; color: #212b36; font-weight: 500; }
+    .table-custom tbody tr { transition: background-color 0.2s; }
+    .table-custom tbody tr:hover { background-color: #fcfcfc; }
+    
+    /* Iconos de Fila */
+    .item-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .icon-repuesto { background: rgba(102, 16, 242, 0.1); color: #6610f2; }
+    .icon-servicio { background: rgba(13, 202, 240, 0.15); color: #087990; }
+
+    /* Tipografía y Badges */
+    .text-sku { font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; color: #919eab; font-weight: 700; letter-spacing: 0.5px; }
+    .app-badge { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px; border: 1px solid transparent; }
+    
+    /* Botones de Acción minimalistas */
+    .btn-action { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; transition: all 0.2s; border: 1px solid transparent; background: transparent; color: #637381; }
+    .btn-action:hover { background: #f4f6f8; border-color: #dfe3e8; color: #212b36; }
+    .btn-action.delete:hover { background: rgba(220, 53, 69, 0.1); color: #dc3545; border-color: rgba(220, 53, 69, 0.2); }
+</style>
+
+<div class="page-header d-flex justify-content-between align-items-center mt-2">
+    <div>
+        <h2 class="m-0 fw-bolder text-dark" style="letter-spacing: -0.5px;">Catálogo e Inventario</h2>
+        <p class="text-muted small mt-1 mb-0">Gestione los repuestos físicos y la tarifa de sus servicios.</p>
+    </div>
+    <a href="/inventario/nuevo" class="btn btn-primary fw-bold px-4 py-2 shadow-sm" style="background-color: #6610f2; border-color: #6610f2;">
+        <i class="bi bi-plus-lg me-2"></i>Añadir Ítem
+    </a>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="kpi-card">
+            <div class="kpi-icon bg-light text-dark border"><i class="bi bi-collection-fill"></i></div>
+            <div>
+                <p class="text-muted small fw-bold mb-0 text-uppercase">Total Catálogo</p>
+                <h3 class="fw-bolder m-0 text-dark">{{ stats.total_items | default(productos|length) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card">
+            <div class="kpi-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <div>
+                <p class="text-danger small fw-bold mb-0 text-uppercase">Stock Crítico</p>
+                <h3 class="fw-bolder m-0 text-danger">{{ stats.bajo_stock | default('0') }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="kpi-card" style="border-left: 4px solid #6366f1;">
+            <div class="kpi-icon" style="background: rgba(99, 102, 241, 0.1); color: #6366f1;"><i class="bi bi-bank2"></i></div>
+            <div>
+                <p class="small fw-bold mb-0 text-uppercase" style="color: #6366f1;">Valor Almacén</p>
+                <h3 class="fw-bolder m-0" style="color: #6366f1;">S/ {{ "%.2f"|format(stats.valor_inventario | default(0)) }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="kpi-card">
+            <div class="kpi-icon bg-info bg-opacity-10 text-info"><i class="bi bi-wrench-adjustable-circle-fill"></i></div>
+            <div>
+                <p class="text-info small fw-bold mb-0 text-uppercase text-dark">Servicios Activos</p>
+                <h3 class="fw-bolder m-0 text-dark">{{ stats.total_servicios | default('0') }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid-container">
+    
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center p-3 border-bottom bg-white gap-3">
+        <div class="d-flex gap-2 w-100" style="max-width: 600px;">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control bg-light border-start-0 ps-0" id="buscador" placeholder="Buscar por código, nombre o marca..." onkeyup="filtrarTabla()">
+            </div>
+            <select class="form-select bg-light w-auto" id="filtroAplicacion" onchange="filtrarTabla()" style="min-width: 160px;">
+                <option value="">Aplicación: Todas</option>
+                <option value="Liviano">Livianos</option>
+                <option value="Pesado">Pesados / Camiones</option>
+                <option value="Maquinaria">Maquinaria</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="filter-tabs">
+        <button class="nav-btn active" onclick="filtrarPorTipo('todos', this)">Ver Todos</button>
+        <button class="nav-btn" onclick="filtrarPorTipo('repuesto', this)"><i class="bi bi-box-seam me-1"></i> Repuestos</button>
+        <button class="nav-btn" onclick="filtrarPorTipo('servicio', this)"><i class="bi bi-wrench me-1"></i> Servicios</button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-custom" id="tablaPrincipal">
+            <thead>
+                <tr>
+                    <th>Ítem / Descripción</th>
+                    <th>Aplicación</th>
+                    <th class="text-end col-finanzas">Costo (CPP)</th>
+                    <th class="text-end">Tarifa / P. Venta</th>
+                    <th class="text-center col-finanzas">Rentabilidad</th>
+                    <th class="text-center col-stock">Estado Stock</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in productos %}
+                <tr class="fila-item" data-tipo="{{ p.tipo }}" data-aplicacion="{{ p.aplicacion }}">
+                    
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="item-icon {% if p.tipo == 'repuesto' %}icon-repuesto{% else %}icon-servicio{% endif %} me-3">
+                                <i class="bi {% if p.tipo == 'repuesto' %}bi-box-seam-fill{% else %}bi-wrench-adjustable-circle-fill{% endif %}"></i>
+                            </div>
+                            <div>
+                                <div class="text-dark mb-1" style="font-size: 0.95rem; font-weight: 700;">{{ p.nombre }}</div>
+                                <div class="text-sku">{{ p.codigo }} {% if p.marca %}<span class="mx-1">•</span> <span class="text-muted">{{ p.marca }}</span>{% endif %}</div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td>
+                        {% if 'Pesado' in (p.aplicacion or '') %}
+                            <span class="app-badge bg-dark text-warning border-warning"><i class="bi bi-truck me-1"></i>PESADO</span>
+                        {% elif 'Liviano' in (p.aplicacion or '') %}
+                            <span class="app-badge bg-info bg-opacity-10 text-info border-info"><i class="bi bi-car-front me-1"></i>LIVIANO</span>
+                        {% elif 'Maquinaria' in (p.aplicacion or '') %}
+                            <span class="app-badge bg-warning bg-opacity-10 text-dark border-warning"><i class="bi bi-gear-wide-connected me-1"></i>MAQUINARIA</span>
+                        {% else %}
+                            <span class="app-badge bg-light text-muted border-secondary">UNIVERSAL</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end col-finanzas">
+                        {% if p.tipo == 'repuesto' %}
+                            <span class="text-muted fw-bold">S/ {{ "%.2f"|format(p.precio_compra) }}</span>
+                        {% else %}
+                            <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end">
+                        <span class="fw-bolder text-dark">S/ {{ "%.2f"|format(p.precio_venta) }}</span>
+                    </td>
+
+                    <td class="text-center col-finanzas">
+                        {% if p.tipo == 'repuesto' and p.precio_compra > 0 %}
+                            {% set margen = ((p.precio_venta - p.precio_compra) / p.precio_compra) * 100 %}
+                            <span class="badge {% if margen >= 30 %}bg-success bg-opacity-10 text-success border border-success{% else %}bg-warning bg-opacity-10 text-dark border border-warning{% endif %} px-2 py-1">
+                                {{ "%.0f"|format(margen) }}%
+                            </span>
+                        {% else %}
+                            <span class="text-muted small fst-italic">—</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-center col-stock">
+                        {% if p.tipo == 'repuesto' %}
+                            {% if p.stock_actual <= 0 %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1"><i class="bi bi-x-circle-fill me-1"></i>Agotado</span>
+                            {% elif p.stock_actual <= p.stock_minimo %}
+                                <span class="badge bg-warning bg-opacity-10 text-dark border border-warning px-2 py-1"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Quedan {{ p.stock_actual }}</span>
+                            {% else %}
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i>{{ p.stock_actual }} en stock</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-muted small fst-italic">— Ilimitado —</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end">
+                        <div class="d-flex justify-content-end gap-1">
+                            <a href="/inventario/editar/{{ p.id }}" class="btn-action" title="Editar Ítem">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <button type="button" class="btn-action delete" title="Eliminar Ítem"
+                                    data-bs-toggle="modal" data-bs-target="#modalConfirmarEliminar" 
+                                    data-url="{{ url_for('eliminar_producto', producto_id=p.id) }}" 
+                                    data-nombre="{{ p.nombre }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <div class="text-muted mb-3"><i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i></div>
+                        <h6 class="fw-bold text-dark">Catálogo Vacío</h6>
+                        <p class="text-muted small">Aún no se han registrado ítems en la base de datos.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modalConfirmarEliminar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-5 text-center">
+                <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex p-4 mb-4">
+                    <i class="bi bi-trash3-fill display-4 m-0"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">¿Eliminar del catálogo?</h4>
+                <p class="text-muted mb-4">Está a punto de borrar: <strong id="nombreItemModal" class="text-dark">...</strong></p>
+                <div class="d-flex justify-content-center gap-3">
+                    <button type="button" class="btn btn-light px-4 py-2 fw-bold border" data-bs-dismiss="modal">Cancelar</button>
+                    <a id="btnConfirmarEliminarItem" href="#" class="btn btn-danger px-4 py-2 fw-bold shadow-sm">Sí, Eliminar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Filtro Dual (INTACTO)
+    function filtrarTabla() {
+        let texto = document.getElementById("buscador").value.toUpperCase();
+        let tipoVehiculo = document.getElementById("filtroAplicacion").value;
+        let filas = document.querySelectorAll(".fila-item");
+
+        filas.forEach(fila => {
+            let contenidoFila = fila.textContent.toUpperCase();
+            let appFila = fila.getAttribute('data-aplicacion') || "";
+            
+            let coincideTexto = contenidoFila.includes(texto);
+            let coincideTipo = tipoVehiculo === "" || appFila.includes(tipoVehiculo);
+            
+            let ocultoPorPestana = fila.classList.contains('d-none-tab');
+
+            if (coincideTexto && coincideTipo && !ocultoPorPestana) {
+                fila.style.display = "";
+            } else {
+                fila.style.display = "none";
+            }
+        });
+    }
+
+    // Filtro por Pestañas (ACTUALIZADO PARA OCULTAR COSTO Y RENTABILIDAD EN "SERVICIOS")
+    function filtrarPorTipo(tipo, btn) {
+        document.querySelectorAll('.filter-tabs .nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        let filas = document.querySelectorAll(".fila-item");
+        
+        let columnasStock = document.querySelectorAll('.col-stock');
+        let columnasFinanzas = document.querySelectorAll('.col-finanzas'); // <-- Las nuevas columnas
+        
+        if (tipo === 'servicio') {
+            // Ocultamos el header <th> y todas las celdas <td> del stock y finanzas
+            columnasStock.forEach(col => col.style.display = 'none');
+            columnasFinanzas.forEach(col => col.style.display = 'none');
+        } else {
+            // Volvemos a mostrar la columna si es Todos o Repuestos
+            columnasStock.forEach(col => col.style.display = '');
+            columnasFinanzas.forEach(col => col.style.display = '');
+        }
+
+        filas.forEach(fila => {
+            let tipoFila = fila.getAttribute("data-tipo");
+            
+            if (tipo === 'todos' || tipo === tipoFila) {
+                fila.classList.remove('d-none-tab');
+            } else {
+                fila.classList.add('d-none-tab');
+            }
+        });
+        
+        filtrarTabla();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var modalConfirmar = document.getElementById('modalConfirmarEliminar');
+        if (modalConfirmar) {
+            modalConfirmar.addEventListener('show.bs.modal', function (event) {
+                var boton = event.relatedTarget;
+                var url = boton.getAttribute('data-url');
+                var nombre = boton.getAttribute('data-nombre');
+                modalConfirmar.querySelector('#nombreItemModal').textContent = nombre;
+                modalConfirmar.querySelector('#btnConfirmarEliminarItem').setAttribute('href', url);
+            });
+        }
+    });
+</script>
+{% endblock %}

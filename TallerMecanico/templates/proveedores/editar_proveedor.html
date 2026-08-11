@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Editar Proveedor - Virgen de Chapi{% endblock %}
+{% block active_proveedores %}active{% endblock %}
+
+{% block content %}
+<style>
+    .card-enterprise { border-radius: 16px; border: none; background-color: #ffffff; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+    .section-title { font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-bottom: 1.5rem; display: flex; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.8rem; }
+    .section-title i { background: #f3e8ff; color: #6d28d9; padding: 10px; border-radius: 10px; margin-right: 12px; font-size: 1.3rem; }
+    .form-control, .form-select { border-radius: 8px; border: 2px solid #e2e8f0; padding: 0.7rem 1rem; font-weight: 600; }
+    .input-group-text { border-radius: 8px 0 0 8px; border: 2px solid #e2e8f0; border-right: none; background-color: #f8fafc; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h3 mb-1 fw-black text-dark"><i class="bi bi-pencil-square text-primary me-2"></i>Editar Proveedor</h2>
+        <p class="text-muted fw-medium small mb-0">Actualización de datos de la empresa: <strong>{{ proveedor.nombre_completo }}</strong></p>
+    </div>
+    <a href="/proveedores" class="btn btn-light border fw-bold rounded-pill px-4 shadow-sm">
+        <i class="bi bi-arrow-left me-2"></i>Volver al Directorio
+    </a>
+</div>
+
+<div class="card-enterprise p-4 p-md-5">
+    <form action="/proveedores/editar/{{ proveedor.id }}" method="POST">
+        
+        <div class="section-title"><i class="bi bi-building-lock"></i> 1. Identidad de la Empresa</div>
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <label class="text-uppercase small fw-bold text-muted mb-1">Documento</label>
+                <input type="text" class="form-control bg-light text-muted" value="{{ proveedor.tipo_documento }} - {{ proveedor.numero_documento }}" readonly>
+            </div>
+            <div class="col-md-8">
+                <label class="text-uppercase small fw-bold text-muted mb-1">Razón Social</label>
+                <input type="text" class="form-control bg-light text-muted" value="{{ proveedor.nombre_completo }}" readonly>
+            </div>
+            <div class="col-md-12">
+                <label class="text-uppercase small fw-bold text-dark mb-1">Dirección Fiscal <span class="text-danger">*</span></label>
+                <input type="text" class="form-control text-uppercase" name="direccion" value="{{ proveedor.direccion }}" required>
+            </div>
+        </div>
+
+        <div class="section-title mt-5"><i class="bi bi-telephone"></i> 2. Información de Contacto</div>
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <label class="text-uppercase small fw-bold text-dark mb-1">Nombre del Asesor/Vendedor</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                    <input type="text" class="form-control" name="nombre_contacto" value="{{ proveedor.nombre_contacto or '' }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="text-uppercase small fw-bold text-dark mb-1">Teléfono de Ventas</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                    <input type="text" class="form-control" name="telefono" value="{{ proveedor.telefono or '' }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="text-uppercase small fw-bold text-dark mb-1">Correo Electrónico</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input type="email" class="form-control text-lowercase" name="email" value="{{ proveedor.email or '' }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="text-uppercase small fw-bold text-dark mb-1">Estado Operativo</label>
+                <select class="form-select" name="estado">
+                    <option value="activo" {% if proveedor.estado == 'activo' %}selected{% endif %}>🟢 Activo</option>
+                    <option value="inactivo" {% if proveedor.estado == 'inactivo' %}selected{% endif %}>🔴 Inactivo</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end border-top pt-4 mt-2">
+            <button type="submit" class="btn btn-primary shadow fw-bold px-5 py-2 rounded-pill" style="background: linear-gradient(135deg, #0d6efd, #0b5ed7); border: none;">
+                <i class="bi bi-save me-2"></i>Guardar Cambios
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block title %}Historial de Compras - Virgen de Chapi{% endblock %}
+{% block active_historial_compras %}active{% endblock %}
+
+{% block content %}
+<style>
+    /* ==========================================================================
+       DISEÑO PREMIUM SAAS - HISTORIAL DE COMPRAS
+       ========================================================================== */
+    body { background-color: #f8fafc; }
+    
+    .page-header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end; }
+    .page-title { color: #0f172a; font-size: 2rem; font-weight: 800; margin: 0; letter-spacing: -0.5px; display: flex; align-items: center; gap: 12px; }
+    .page-subtitle { color: #64748b; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+
+    /* --- TARJETAS KPI --- */
+    .kpi-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; display: flex; align-items: center; gap: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.08); border-color: #cbd5e1; }
+    .kpi-icon-box { width: 60px; height: 60px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: white; flex-shrink: 0; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.1); }
+    
+    /* Gradientes Modernos */
+    .bg-grad-blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+    .bg-grad-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .bg-grad-red { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+
+    .kpi-text h6 { color: #64748b; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; margin-bottom: 0.3rem; letter-spacing: 0.5px; }
+    .kpi-text h2 { color: #0f172a; font-size: 2rem; font-weight: 900; margin: 0; letter-spacing: -1px; line-height: 1; }
+
+    /* --- TABLA PRINCIPAL --- */
+    .table-container { background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); overflow: hidden; }
+    .modern-table { width: 100%; margin: 0; border-collapse: collapse; }
+    .modern-table th { background: #f8fafc; color: #475569; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 1.2rem 1.5rem; border-bottom: 1px solid #e2e8f0; }
+    .modern-table td { padding: 1.2rem 1.5rem; vertical-align: middle; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 0.95rem; font-weight: 600; }
+    .modern-table tbody tr { transition: all 0.2s ease; }
+    .modern-table tbody tr:hover { background-color: #f8fafc; }
+
+    /* --- ESTILOS DE ETIQUETAS Y BOTONES --- */
+    .badge-status { padding: 0.5em 1em; border-radius: 30px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px; }
+    .status-pagado { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .status-pendiente { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    
+    .btn-icon { width: 38px; height: 38px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; border: none; transition: 0.2s; cursor: pointer; text-decoration: none; }
+    .btn-view { background: #eff6ff; color: #3b82f6; }
+    .btn-view:hover { background: #3b82f6; color: #ffffff; transform: scale(1.05); }
+    .btn-pdf { background: #fef2f2; color: #ef4444; }
+    .btn-pdf:hover { background: #ef4444; color: #ffffff; transform: scale(1.05); }
+
+    /* Textos secundarios */
+    .text-prov { font-size: 1rem; color: #0f172a; font-weight: 700; }
+    .text-comp { font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; font-weight: 800; color: #64748b; }
+    
+    /* --- MODAL --- */
+    .modal-content { border-radius: 24px; border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; }
+    .modal-header { background: #ffffff; border-bottom: 1px solid #f1f5f9; padding: 1.5rem 2rem; }
+    .modal-body { padding: 2rem; background-color: #f8fafc; }
+    .modal-footer { border-top: 1px solid #f1f5f9; background: #ffffff; padding: 1.2rem 2rem; }
+</style>
+
+<div class="container-fluid py-4 animate__animated animate__fadeIn">
+    
+    <div class="page-header">
+        <div>
+            <div class="page-subtitle">Módulo Financiero</div>
+            <h1 class="page-title">
+                <i class="bi bi-wallet2 text-primary" style="font-size: 2.2rem;"></i> 
+                Historial de Compras
+            </h1>
+        </div>
+        <div>
+            <a href="{{ url_for('nueva_compra') }}" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm px-4 d-flex align-items-center gap-2" style="background-color: #4f46e5; border-color: #4f46e5;">
+                <i class="bi bi-cart-plus-fill fs-5"></i> Ingresar Nueva Compra
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="kpi-card">
+                <div class="kpi-icon-box bg-grad-blue"><i class="bi bi-receipt-cutoff"></i></div>
+                <div class="kpi-text">
+                    <h6>Total Operaciones</h6>
+                    <h2>{{ compras|length }} <span style="font-size: 1rem; color: #94a3b8; font-weight: 600;">Docs</span></h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="kpi-card">
+                <div class="kpi-icon-box bg-grad-green"><i class="bi bi-safe2-fill"></i></div>
+                <div class="kpi-text">
+                    <h6>Inversión Histórica</h6>
+                    <h2><span style="font-size: 1.2rem; color: #94a3b8;">S/</span> {{ "%.2f"|format(total_invertido) }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="kpi-card" style="border-left: 5px solid #ef4444;">
+                <div class="kpi-icon-box bg-grad-red"><i class="bi bi-exclamation-octagon-fill"></i></div>
+                <div class="kpi-text">
+                    <h6>Deuda Pendiente (Créditos)</h6>
+                    <h2 class="text-danger"><span style="font-size: 1.2rem; color: #fca5a5;">S/</span> {{ "%.2f"|format(total_deuda) }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th width="12%">Fecha</th>
+                        <th width="18%">Comprobante</th>
+                        <th width="30%">Proveedor</th>
+                        <th width="15%" class="text-end">Total Facturado</th>
+                        <th width="15%" class="text-center">Estado</th>
+                        <th width="10%" class="text-center">Evidencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in compras %}
+                    <tr>
+                        <td class="text-muted"><i class="bi bi-calendar3 me-2"></i>{{ c.fecha_emision }}</td>
+                        <td>
+                            <div style="color: #3b82f6; font-weight: 800; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 2px;">{{ c.tipo_comprobante }}</div>
+                            <div class="text-comp">{{ c.numero_comprobante }}</div>
+                        </td>
+                        <td class="text-prov">{{ c.razon_social }}</td>
+                        <td class="text-end fs-5 fw-bolder text-dark">S/ {{ "%.2f"|format(c.total_compra) }}</td>
+                        <td class="text-center">
+                            {% if c.estado_pago == 'pagado' %}
+                                <span class="badge-status status-pagado"><i class="bi bi-check-circle-fill"></i> Pagado</span>
+                            {% else %}
+                                <span class="badge-status status-pendiente"><i class="bi bi-clock-history"></i> Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-2">
+                                <button class="btn-icon btn-view shadow-sm" onclick="verDetalles('{{ c.id }}', '{{ c.numero_comprobante }}', '{{ c.razon_social }}')" title="Ver Detalle de Compra">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+                                
+                                {% if c.archivo_adjunto %}
+                                <a href="{{ url_for('static', filename='uploads/facturas_compras/' ~ c.archivo_adjunto) }}" target="_blank" class="btn-icon btn-pdf shadow-sm" title="Ver Factura Original">
+                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                </a>
+                                {% else %}
+                                <button class="btn-icon text-muted" style="background: #f1f5f9; cursor: not-allowed;" title="Sin evidencia adjunta" disabled>
+                                    <i class="bi bi-file-earmark-x"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="text-muted mb-3"><i class="bi bi-folder-x" style="font-size: 4rem; opacity: 0.2;"></i></div>
+                            <h5 class="fw-bold text-dark">Historial en blanco</h5>
+                            <p class="text-muted">Aún no se han registrado ingresos de mercadería en el sistema.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDetalles" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title m-0 fw-bolder text-dark"><i class="bi bi-box-seam-fill text-primary me-2"></i>Detalle de Repuestos</h5>
+                    <small class="text-muted fw-bold" id="modal-subtitle">Cargando...</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                
+                <div id="loader-detalles" class="text-center py-5">
+                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+                    <p class="mt-3 text-muted fw-bold">Consultando la base de datos...</p>
+                </div>
+
+                <div class="d-none animate__animated animate__fadeIn" id="tabla-detalles-container">
+                    
+                    <div class="table-responsive bg-white rounded-4 shadow-sm border border-secondary border-opacity-10 mb-4 overflow-hidden">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light text-muted small text-uppercase fw-bold">
+                                <tr>
+                                    <th class="ps-4">Código</th>
+                                    <th>Repuesto / Descripción</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th class="text-end">Costo Unit.</th>
+                                    <th class="text-end pe-4">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-detalles" class="fw-bold text-dark align-middle">
+                                </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row bg-white rounded-4 p-4 shadow-sm border border-secondary border-opacity-10">
+                        <div class="col-md-7 border-end border-light">
+                            <h6 class="fw-bolder text-dark mb-2" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <i class="bi bi-journal-text text-muted me-1"></i> Observaciones de Almacén
+                            </h6>
+                            <p class="text-muted small mb-0" id="modal-observaciones" style="font-style: italic; line-height: 1.6;">Ninguna</p>
+                        </div>
+                        <div class="col-md-5 ps-md-4">
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span class="text-muted fw-bold">Subtotal Prod:</span>
+                                <span class="fw-bold text-dark">S/ <span id="modal-subtotal">0.00</span></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span class="text-danger fw-bold">Descuento:</span>
+                                <span class="fw-bold text-danger">- S/ <span id="modal-descuento">0.00</span></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span class="text-muted fw-bold">Flete / Transporte:</span>
+                                <span class="fw-bold text-info">+ S/ <span id="modal-flete">0.00</span></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3 small">
+                                <span class="text-muted fw-bold">I.G.V (18%):</span>
+                                <span class="fw-bold text-dark">S/ <span id="modal-igv">0.00</span></span>
+                            </div>
+                            <div class="d-flex justify-content-between border-top border-secondary border-opacity-10 pt-3">
+                                <span class="fw-bolder text-dark" style="font-size: 1.2rem;">TOTAL:</span>
+                                <span class="fw-black text-success" style="font-size: 1.3rem;">S/ <span id="modal-total">0.00</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light fw-bold rounded-pill px-4 border" data-bs-dismiss="modal">Cerrar Detalle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function verDetalles(compra_id, comprobante, proveedor) {
+        const modal = new bootstrap.Modal(document.getElementById('modalDetalles'));
+        document.getElementById('modal-subtitle').innerHTML = `Comp: <span class="text-dark">${comprobante}</span> | Prov: <span class="text-dark">${proveedor}</span>`;
+        
+        document.getElementById('loader-detalles').classList.remove('d-none');
+        document.getElementById('tabla-detalles-container').classList.add('d-none');
+        document.getElementById('tbody-detalles').innerHTML = '';
+        
+        modal.show();
+
+        try {
+            const response = await fetch(`/api/compras/${compra_id}/detalles`);
+            const data = await response.json(); 
+
+            if (data.error) throw new Error(data.error);
+
+            let html = '';
+            data.items.forEach(d => {
+                html += `
+                    <tr>
+                        <td class="ps-4"><span class="bg-light text-muted px-2 py-1 rounded font-monospace small">${d.codigo || 'S/C'}</span></td>
+                        <td class="text-dark">${d.producto}</td>
+                        <td class="text-center"><span class="badge bg-primary rounded-pill">${d.cantidad}</span></td>
+                        <td class="text-end text-muted">S/ ${parseFloat(d.precio).toFixed(2)}</td>
+                        <td class="text-end text-success pe-4">S/ ${parseFloat(d.subtotal).toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tbody-detalles').innerHTML = html;
+
+            document.getElementById('modal-subtotal').innerText = parseFloat(data.resumen.subtotal).toFixed(2);
+            document.getElementById('modal-descuento').innerText = parseFloat(data.resumen.descuento).toFixed(2);
+            document.getElementById('modal-flete').innerText = parseFloat(data.resumen.flete).toFixed(2);
+            document.getElementById('modal-igv').innerText = parseFloat(data.resumen.igv).toFixed(2);
+            document.getElementById('modal-total').innerText = parseFloat(data.resumen.total_compra).toFixed(2);
+            
+            if(data.resumen.observaciones && data.resumen.observaciones.trim() !== '') {
+                document.getElementById('modal-observaciones').innerText = data.resumen.observaciones;
+            } else {
+                document.getElementById('modal-observaciones').innerText = "Sin notas adicionales en esta compra.";
+            }
+            
+            document.getElementById('loader-detalles').classList.add('d-none');
+            document.getElementById('tabla-detalles-container').classList.remove('d-none');
+
+        } catch (error) {
+            console.error("Error cargando detalles:", error);
+            document.getElementById('loader-detalles').innerHTML = `<i class="bi bi-exclamation-triangle-fill text-danger fs-1"></i><p class="mt-3 text-danger fw-bold">Error de conexión al servidor.</p>`;
+        }
+    }
+</script>
+{% endblock %}

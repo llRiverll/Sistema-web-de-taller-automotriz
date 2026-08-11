@@ -1,0 +1,533 @@
+{% extends "base.html" %}
+{% block title %}Nueva Compra - Virgen de Chapi{% endblock %}
+{% block active_inventario %}active{% endblock %}
+
+{% block content %}
+<style>
+    body { background-color: #f8fafc; }
+    .breadcrumb-text { color: #64748b; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.2rem; display: block; }
+    .page-title { color: #0f172a; font-size: 1.8rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .badge-enterprise { background-color: #eff6ff; color: #2563eb; font-size: 0.75rem; font-weight: 700; padding: 0.4rem 0.8rem; border-radius: 20px; }
+    
+    .card-clean { background: #ffffff; border-radius: 16px; border: none; padding: 1.8rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); margin-bottom: 1.5rem; }
+    .card-title-clean { font-size: 1.1rem; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; }
+    .icon-box-blue { background: #3b82f6; color: white; width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .icon-box-green { background: #10b981; color: white; width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+
+    .form-label-clean { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem; }
+    .input-clean { border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.6rem 1rem; color: #0f172a; font-weight: 500; font-size: 0.95rem; transition: all 0.2s; }
+    .input-clean:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); outline: none; }
+
+    .table-clean { width: 100%; border-collapse: collapse; }
+    .table-clean th { font-size: 0.65rem; font-weight: 800; color: #475569; text-transform: uppercase; padding-bottom: 1rem; border-bottom: 2px solid #f1f5f9; text-align: left; }
+    .table-clean td { padding: 0.8rem 0; vertical-align: middle; }
+    .input-table { border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.5rem; width: 100%; font-size: 0.9rem; font-weight: 500; color: #0f172a; }
+    .input-table:focus { border-color: #3b82f6; outline: none; }
+    .btn-add-row { background: #3b82f6; color: white; font-weight: 700; border-radius: 20px; padding: 0.4rem 1.2rem; font-size: 0.85rem; border: none; transition: 0.2s; }
+    .btn-add-row:hover { background: #2563eb; }
+
+    .panel-dark { background-color: #1e293b; border-radius: 16px; padding: 2rem; color: white; position: sticky; top: 1.5rem; }
+    .panel-dark-title { font-size: 0.8rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1.5rem; }
+    .row-summary { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; color: #cbd5e1; font-size: 0.95rem; font-weight: 500; }
+    .input-dark-sm { background: #0f172a; border: 1px solid #475569; color: #4ade80; border-radius: 6px; padding: 0.3rem; width: 80px; text-align: right; font-weight: bold; font-size: 0.9rem; }
+    .input-dark-sm:focus { outline: none; border-color: #3b82f6; }
+    
+    .total-title { text-align: center; color: #64748b; font-size: 0.75rem; font-weight: 800; margin-top: 1.5rem; }
+    .total-amount { text-align: center; color: #4ade80; font-size: 3.2rem; font-weight: 900; letter-spacing: -2px; margin-bottom: 1.5rem; line-height: 1; }
+    
+    .toggle-container { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1rem; display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; }
+    .form-switch .form-check-input { width: 2.5em; height: 1.2em; background-color: #3b82f6; border-color: #3b82f6; cursor: pointer; }
+
+    .btn-process { background-color: #4a9e62; color: white; border: none; width: 100%; border-radius: 12px; padding: 1rem; font-weight: 700; font-size: 1rem; transition: 0.2s; }
+    .btn-process:hover { background-color: #3b804e; }
+
+    .evidence-card { background: #ffffff; border-radius: 16px; padding: 1.5rem; margin-top: 1rem; border: 1px solid #e2e8f0; }
+    .dropzone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: 0.2s; background: #f8fafc; }
+    .dropzone:hover { border-color: #3b82f6; background: #eff6ff; }
+
+    /* =========================================================
+       NUEVOS ESTILOS PREMIUM PARA SUGERENCIAS Y SELECT2
+       ========================================================= */
+    .panel-sugerencias { background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.05); }
+    
+    /* Botones de sugerencia como tarjetas modernas */
+    .btn-sugerencia { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 0.5rem 1rem; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s; min-width: 250px; }
+    .btn-sugerencia:hover { border-color: #3b82f6; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(59, 130, 246, 0.1); cursor: pointer; }
+    .btn-sugerencia.disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; background: #f8fafc; border-color: #f1f5f9; }
+    
+    /* Fallbacks por si Bootstrap 5.3 no está activo para los "subtle" colors */
+    .bg-danger-subtle { background-color: #fee2e2 !important; }
+    .text-danger-emphasis { color: #991b1b !important; }
+    .border-danger-subtle { border-color: #fca5a5 !important; }
+    
+    .bg-warning-subtle { background-color: #fef3c7 !important; }
+    .text-warning-emphasis { color: #92400e !important; }
+    .border-warning-subtle { border-color: #fcd34d !important; }
+
+    .bg-success-subtle { background-color: #dcfce7 !important; }
+    .text-success-emphasis { color: #166534 !important; }
+    .border-success-subtle { border-color: #86efac !important; }
+
+    /* Ajuste de altura del Select2 para igualar inputs */
+    .select2-container .select2-selection--single { height: 42px !important; border: 1px solid #e2e8f0; border-radius: 8px; display: flex; align-items: center; }
+    .select2-container--default .select2-selection--single .select2-selection__arrow { height: 40px; }
+</style>
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<div class="container-fluid py-4 animate__animated animate__fadeIn">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <span class="breadcrumb-text">Inventario / Nueva Compra</span>
+            <h1 class="page-title">
+                <i class="bi bi-box-arrow-in-down text-primary"></i> Ingreso de Mercadería
+            </h1>
+        </div>
+        <div>
+            <span class="badge-enterprise"><i class="bi bi-star-fill text-warning me-1"></i> Módulo Enterprise</span>
+        </div>
+    </div>
+
+    <form id="formNuevaCompra" method="POST" action="/inventario/compras/nueva" enctype="multipart/form-data">
+        <div class="row g-4">
+            
+            <div class="col-lg-8">
+                
+                <div class="card-clean">
+                    <div class="card-title-clean">
+                        <div class="icon-box-blue"><i class="bi bi-shop"></i></div>
+                        Información del Proveedor y Comprobante
+                    </div>
+                    
+                    <div class="row g-4">
+                        <div class="col-md-7">
+                            <label class="form-label-clean">Proveedor</label>
+                            <select class="form-select input-clean" name="proveedor_id" id="proveedor_id" required>
+                                <option value="" disabled selected>Buscar proveedor por RUC o Nombre...</option>
+                                {% for p in proveedores %}
+                                <option value="{{ p.proveedor_id }}" data-ruc="{{ p.ruc }}">{{ p.razon_social }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label-clean">Fecha de Emisión</label>
+                            <input type="date" class="form-control input-clean" name="fecha_emision" id="fecha_emision" value="{{ hoy }}" required>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label-clean">Tipo Doc.</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-file-earmark-text"></i></span>
+                                <select class="form-select input-clean border-start-0 ps-0" name="tipo_comprobante" id="tipo_comprobante" required>
+                                    <option value="Factura">Factura</option>
+                                    <option value="Boleta">Boleta</option>
+                                    <option value="Guia">Guía de Remisión</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-clean">Serie y Número</label>
+                            <input type="text" class="form-control input-clean text-uppercase" name="numero_comprobante" id="numero_comprobante" placeholder="EJ: F001-000234" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-clean">Forma de Pago</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-success"><i class="bi bi-cash-stack"></i></span>
+                                <select class="form-select input-clean border-start-0 ps-0" name="metodo_pago" id="metodo_pago" onchange="toggleCredito()" required>
+                                    <option value="contado">Al Contado</option>
+                                    <option value="credito">Crédito a Plazos</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-none fade-in" id="caja_vencimiento">
+                            <label class="form-label-clean text-danger">Fecha de Vencimiento</label>
+                            <input type="date" class="form-control input-clean border-danger" name="fecha_vencimiento" id="fecha_vencimiento">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-sugerencias">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-exclamation-triangle-fill text-warning fs-4 me-2"></i>
+                        <h6 class="m-0 fw-bold text-dark">Sugerencias de Abastecimiento Crítico</h6>
+                    </div>
+                    <p class="text-muted small mb-3">Los siguientes repuestos necesitan atención urgente. Haz clic para pedirlos:</p>
+                    
+                    <div class="d-flex flex-wrap gap-2" id="contenedor-sugerencias">
+                        {% set hay_criticos = false %}
+                        {% for p in productos %}
+                            {% if p.stock_actual <= p.stock_minimo %}
+                                {% set hay_criticos = true %}
+                                
+                                <button type="button" class="btn-sugerencia tool-add-critico" data-id="{{ p.id }}">
+                                    <div class="d-flex flex-column text-start">
+                                        <span class="text-dark fw-bold" style="font-size: 0.85rem;">{{ p.nombre }}</span>
+                                        <span class="text-muted" style="font-size: 0.7rem;"><i class="bi bi-upc-scan"></i> {{ p.codigo }}</span>
+                                    </div>
+                                    <div>
+                                        {% if p.stock_actual <= 0 %}
+                                            <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-pill px-2 py-1">
+                                                <i class="bi bi-x-circle-fill"></i> Agotado
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-1">
+                                                <i class="bi bi-exclamation-triangle-fill"></i> Quedan {{ p.stock_actual }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </button>
+                                
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if not hay_criticos %}
+                            <span class="badge bg-success-subtle text-success-emphasis px-3 py-2 border border-success-subtle" style="border-radius: 20px;">
+                                <i class="bi bi-check-circle-fill me-1"></i> Inventario en niveles óptimos.
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-clean">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="card-title-clean m-0">
+                            <div class="icon-box-green"><i class="bi bi-boxes"></i></div>
+                            Detalle de Productos
+                        </div>
+                        <button type="button" class="btn-add-row" onclick="agregarFilaManual()"><i class="bi bi-plus-lg me-1"></i> Agregar Fila</button>
+                    </div>
+
+                    <table class="table-clean" id="tablaProductos">
+                        <thead>
+                            <tr>
+                                <th width="45%">Producto</th>
+                                <th width="15%" class="text-center">Cant.</th>
+                                <th width="18%" class="text-center">Costo Unit.</th>
+                                <th width="18%" class="text-center">Subtotal</th>
+                                <th width="4%" class="text-center"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyProductos">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-clean mb-0">
+                    <label class="form-label-clean">Notas Internas / Observaciones de Almacén</label>
+                    <textarea class="form-control input-clean bg-light" name="observaciones" rows="2" placeholder="Ej. El flete incluye carga y descarga..." style="resize: none;"></textarea>
+                </div>
+
+            </div>
+
+            <div class="col-lg-4">
+                <div class="panel-dark shadow-lg">
+                    <div class="panel-dark-title"><i class="bi bi-calculator me-2"></i>LIQUIDACIÓN FINANCIERA</div>
+                    
+                    <div class="row-summary">
+                        <span>Subtotal Productos</span>
+                        <span id="lbl_subtotal" class="fw-bold text-white">S/ 0.00</span>
+                    </div>
+
+                    <div class="row-summary pb-2 border-bottom border-secondary">
+                        <span class="text-warning">Descuento (-)</span>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="text-warning small">S/</span>
+                            <input type="number" class="input-dark-sm text-warning border-warning" name="descuento" id="input_desc" value="0.00" min="0" step="0.01" oninput="calcularTotales()">
+                        </div>
+                    </div>
+
+                    <div class="row-summary mt-3">
+                        <span>I.G.V. (18%)</span>
+                        <span id="lbl_igv" class="fw-bold text-info">S/ 0.00</span>
+                    </div>
+
+                    <div class="row-summary pb-2 border-bottom border-secondary">
+                        <span class="text-secondary">Flete (+)</span>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="text-secondary small">S/</span>
+                            <input type="number" class="input-dark-sm text-secondary" name="flete" id="input_flete" value="0.00" min="0" step="0.01" oninput="calcularTotales()">
+                        </div>
+                    </div>
+
+                    <div class="total-title">TOTAL A PAGAR AL PROVEEDOR</div>
+                    <div class="total-amount" id="lbl_total">S/ 0.00</div>
+
+                    <div class="toggle-container">
+                        <div class="form-check form-switch m-0 p-0 d-flex align-items-center gap-2">
+                            <input class="form-check-input m-0" type="checkbox" id="toggleIgv" checked onchange="calcularTotales()">
+                            <label class="form-check-label toggle-label" for="toggleIgv" style="color:white; font-size: 0.85rem;">Precios unitarios incluyen IGV</label>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="subtotal" id="input_subtotal_hidden" value="0">
+                    <input type="hidden" name="igv" id="input_igv_hidden" value="0">
+                    <input type="hidden" name="total_compra" id="input_total_hidden" value="0">
+
+                    <button type="submit" class="btn-process"><i class="bi bi-hdd-fill me-2"></i> REGISTRAR COMPRA</button>
+                </div>
+
+                <div class="evidence-card shadow-sm">
+                    <div class="evidence-title">
+                        <i class="bi bi-camera"></i> EVIDENCIA DEL COMPROBANTE
+                    </div>
+                    <div class="dropzone" id="btnDropzone">
+                        <i class="bi bi-cloud-arrow-up"></i>
+                        <p>Subir Foto o PDF</p>
+                        <small class="text-muted fw-bold mt-2 d-block">Archivo local</small>
+                    </div>
+                    <input type="file" id="fileFactura" name="archivo_factura" accept="application/pdf, image/*" class="d-none">
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    let contadorFila = 0;
+
+    // ========================================================
+    // MOTOR DE PLANTILLAS PARA SELECT2 (DISEÑO PREMIUM)
+    // ========================================================
+    
+    // Plantilla visual para el dropdown de Proveedores
+    function formatProveedor(state) {
+        if (!state.id) return state.text;
+        const ruc = $(state.element).data('ruc');
+        return $(`
+            <div class="d-flex flex-column py-1">
+                <span class="fw-bold text-dark" style="font-size: 0.9rem;">${state.text}</span>
+                <span class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-building"></i> RUC: ${ruc}</span>
+            </div>
+        `);
+    }
+
+    // Plantilla visual para el dropdown de Productos (Repuestos)
+    function formatProducto(state) {
+        if (!state.id) return state.text;
+        const element = $(state.element);
+        const stock = parseInt(element.data('stock'));
+        const minimo = parseInt(element.data('minimo'));
+        const codigo = element.data('codigo');
+        
+        let badgeHtml = '';
+        if (stock <= 0) {
+            badgeHtml = `<span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-pill"><i class="bi bi-x-circle-fill"></i> Agotado (0)</span>`;
+        } else if (stock <= minimo) {
+            badgeHtml = `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill"><i class="bi bi-exclamation-triangle-fill"></i> Bajo (${stock})</span>`;
+        } else {
+            badgeHtml = `<span class="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill"><i class="bi bi-check-circle-fill"></i> Ok (${stock})</span>`;
+        }
+
+        return $(`
+            <div class="d-flex justify-content-between align-items-center w-100 pe-2 py-1">
+                <div class="d-flex flex-column">
+                    <span class="fw-bold text-dark" style="font-size: 0.85rem;">${state.text}</span>
+                    <span class="text-muted" style="font-size: 0.7rem;"><i class="bi bi-upc-scan"></i> Cod: ${codigo}</span>
+                </div>
+                <div>${badgeHtml}</div>
+            </div>
+        `);
+    }
+
+    // Cómo se ve el producto una vez que ya lo seleccionaste (Cerrado)
+    function formatProductoSeleccionado(state) {
+        if (!state.id) return state.text;
+        return $(`<span class="fw-bold text-dark" style="font-size: 0.85rem;">${state.text}</span>`);
+    }
+
+    // ========================================================
+    // LÓGICA DE INTERFAZ Y CÁLCULOS
+    // ========================================================
+
+    function toggleCredito() {
+        const metodo = document.getElementById('metodo_pago').value;
+        const cajaVencimiento = document.getElementById('caja_vencimiento');
+        const inputVencimiento = document.getElementById('fecha_vencimiento');
+        if(metodo === 'credito') {
+            cajaVencimiento.classList.remove('d-none');
+            inputVencimiento.required = true;
+        } else {
+            cajaVencimiento.classList.add('d-none');
+            inputVencimiento.required = false;
+            inputVencimiento.value = '';
+        }
+    }
+
+    function agregarFilaManual() {
+        contadorFila++;
+        const tr = document.createElement('tr');
+        tr.id = `fila_${contadorFila}`;
+        
+        // El HTML ahora usa data-attributes completos para el diseño premium
+        tr.innerHTML = `
+            <td class="pe-2">
+                <select name="producto_id[]" id="sel_prod_${contadorFila}" class="form-select input-table select2-productos" required>
+                    <option value="" disabled selected>Buscar repuesto por nombre o código...</option>
+                    {% for p in productos %}
+                        <option value="{{ p.id }}" 
+                                data-costo="{{ p.precio_compra | default(0) }}"
+                                data-stock="{{ p.stock_actual }}"
+                                data-minimo="{{ p.stock_minimo }}"
+                                data-codigo="{{ p.codigo }}">
+                            {{ p.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td class="px-2">
+                <input type="number" name="cantidad[]" class="input-table text-center fw-bold" min="1" step="1" value="1" oninput="recalcularFila(${contadorFila})" required>
+            </td>
+            <td class="px-2">
+                <input type="number" name="precio[]" id="precio_${contadorFila}" class="input-table text-center text-primary fw-bold" min="0" step="0.01" value="0.00" oninput="recalcularFila(${contadorFila})" required>
+            </td>
+            <td class="px-2">
+                <input type="text" class="input-table text-center bg-light fw-bold text-dark border-0" id="subtotal_${contadorFila}" value="0.00" readonly>
+            </td>
+            <td class="ps-2 text-center">
+                <button type="button" class="btn btn-link text-danger p-0 m-0" onclick="eliminarFila(${contadorFila})" title="Quitar Fila">
+                    <i class="bi bi-trash-fill fs-5"></i>
+                </button>
+            </td>
+        `;
+        document.getElementById('tbodyProductos').appendChild(tr);
+        
+        // Inicializamos Select2 con el nuevo diseño
+        $(`#sel_prod_${contadorFila}`).select2({
+            width: '100%',
+            templateResult: formatProducto,
+            templateSelection: formatProductoSeleccionado
+        }).on('change', function() {
+            cargarPrecioAnterior(contadorFila);
+            actualizarBotonesSugerencias(); // Dispara la reactivación si cambió
+        });
+        
+        recalcularFila(contadorFila);
+    }
+
+    function cargarPrecioAnterior(id) {
+        const select = document.getElementById(`sel_prod_${id}`);
+        if(select.selectedIndex > 0) {
+            const precioAnterior = parseFloat(select.options[select.selectedIndex].getAttribute('data-costo')) || 0;
+            document.getElementById(`precio_${id}`).value = precioAnterior.toFixed(2);
+            recalcularFila(id);
+        }
+    }
+
+    function recalcularFila(id) {
+        const fila = document.getElementById(`fila_${id}`);
+        if(!fila) return;
+        const cant = parseFloat(fila.querySelector('input[name="cantidad[]"]').value) || 0;
+        const costo = parseFloat(fila.querySelector('input[name="precio[]"]').value) || 0;
+        
+        document.getElementById(`subtotal_${id}`).value = (cant * costo).toFixed(2);
+        calcularTotales();
+    }
+
+    function eliminarFila(id) {
+        document.getElementById(`fila_${id}`).remove();
+        actualizarBotonesSugerencias(); // Al eliminar, escaneamos la tabla para liberar el botón
+        calcularTotales();
+    }
+
+    function calcularTotales() {
+        let suma_filas = 0;
+        document.querySelectorAll('#tbodyProductos tr').forEach(fila => {
+            const cant = parseFloat(fila.querySelector('input[name="cantidad[]"]').value) || 0;
+            const costo = parseFloat(fila.querySelector('input[name="precio[]"]').value) || 0;
+            suma_filas += (cant * costo);
+        });
+
+        const incluyeIgv = document.getElementById('toggleIgv').checked;
+        const descuento = parseFloat(document.getElementById('input_desc').value) || 0;
+        const flete = parseFloat(document.getElementById('input_flete').value) || 0;
+
+        let subtotal_base = 0;
+        let igv = 0;
+        let total = 0;
+
+        let monto_post_descuento = Math.max(0, suma_filas - descuento);
+
+        if (incluyeIgv) {
+            total = monto_post_descuento + flete;
+            subtotal_base = monto_post_descuento / 1.18;
+            igv = monto_post_descuento - subtotal_base;
+        } else {
+            subtotal_base = monto_post_descuento;
+            igv = subtotal_base * 0.18;
+            total = subtotal_base + igv + flete;
+        }
+
+        document.getElementById('lbl_subtotal').innerText = 'S/ ' + subtotal_base.toFixed(2);
+        document.getElementById('lbl_igv').innerText = 'S/ ' + igv.toFixed(2);
+        document.getElementById('lbl_total').innerText = 'S/ ' + total.toFixed(2);
+
+        document.getElementById('input_subtotal_hidden').value = subtotal_base.toFixed(2);
+        document.getElementById('input_igv_hidden').value = igv.toFixed(2);
+        document.getElementById('input_total_hidden').value = total.toFixed(2);
+    }
+
+    // ========================================================
+    // CONTROL INTELIGENTE DE BOTONES DE SUGERENCIA
+    // ========================================================
+    function actualizarBotonesSugerencias() {
+        // 1. Restaurar todos los botones a su estado original
+        $('.tool-add-critico').removeClass('disabled').css('opacity', '1');
+        
+        // 2. Escanear qué repuestos ya están en la tabla
+        $('.select2-productos').each(function() {
+            const valSeleccionado = $(this).val();
+            if(valSeleccionado) {
+                // Si el producto está en la tabla, bloqueamos su botón
+                $(`.tool-add-critico[data-id='${valSeleccionado}']`).addClass('disabled').css('opacity', '0.4');
+            }
+        });
+    }
+
+    // Cuando el usuario hace clic en un botón de sugerencia
+    $(document).on('click', '.tool-add-critico', function() {
+        if($(this).hasClass('disabled')) return; // No hacer nada si ya está en la tabla
+        
+        const prodId = $(this).data('id');
+        
+        // Agregar nueva fila y ubicarla
+        agregarFilaManual(); 
+        const ultimoSelect = $(`#sel_prod_${contadorFila}`);
+        
+        // Seleccionar el producto (trigger 'change' llamará a actualizarBotonesSugerencias)
+        ultimoSelect.val(prodId).trigger('change');
+    });
+
+    // ========================================================
+    // INICIALIZACIÓN
+    // ========================================================
+    $(document).ready(function() {
+        // Inicializar proveedor con diseño premium
+        $('#proveedor_id').select2({ 
+            width: '100%', 
+            templateResult: formatProveedor
+        });
+        
+        agregarFilaManual();
+    });
+
+    // Subida de Archivos
+    document.getElementById('btnDropzone').addEventListener('click', () => {
+        document.getElementById('fileFactura').click();
+    });
+
+    document.getElementById('fileFactura').addEventListener('change', function(e) {
+        if(this.files && this.files[0]) {
+            document.querySelector('#btnDropzone p').innerText = "Documento Adjunto";
+            document.querySelector('#btnDropzone small').innerText = this.files[0].name;
+            document.querySelector('#btnDropzone i').className = "bi bi-check-circle-fill text-success";
+            document.querySelector('#btnDropzone').style.borderColor = "#10b981";
+            document.querySelector('#btnDropzone').style.backgroundColor = "#f0fdf4";
+        }
+    });
+</script>
+{% endblock %}

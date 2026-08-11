@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Taller - Virgen de Chapi{% endblock %}
+{% block active_taller %}active{% endblock %}
+
+{% block content %}
+<style>
+    .card-modern { border: none; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.04); background: #ffffff; overflow: hidden; }
+    
+    .nav-pills-custom { gap: 10px; margin-bottom: 1.5rem; }
+    .nav-pills-custom .nav-link { border-radius: 12px; color: #6c757d; font-weight: 700; padding: 12px 24px; transition: all 0.3s ease; background-color: #fff; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 2px 5px rgba(0,0,0,0.02); letter-spacing: 0.5px; text-transform: uppercase; font-size: 0.85rem; }
+    .nav-pills-custom .nav-link:hover { background-color: #f8f9fa; transform: translateY(-2px); }
+    .nav-pills-custom .nav-link.active-blue { background-color: #0d6efd !important; color: white !important; border-color: #0d6efd; box-shadow: 0 6px 15px rgba(13, 110, 253, 0.3); }
+    .nav-pills-custom .nav-link.active-green { background-color: #198754 !important; color: white !important; border-color: #198754; box-shadow: 0 6px 15px rgba(25, 135, 84, 0.3); }
+    .nav-pills-custom .nav-link.active-gray { background-color: #6c757d !important; color: white !important; border-color: #6c757d; box-shadow: 0 6px 15px rgba(108, 117, 125, 0.3); }
+
+    /* Efecto Visual FIFO (El primero de la lista resalta más) */
+    .table-hover tbody tr { transition: background-color 0.2s ease, transform 0.2s ease; border-bottom: 1px solid #f1f3f5; }
+    .table-hover tbody tr:hover { background-color: #f8faff; transform: scale(1.005); box-shadow: 0 4px 10px rgba(0,0,0,0.02); z-index: 10; position: relative; }
+    .table-hover tbody tr.prioridad-alta { border-left: 4px solid #dc3545; background-color: rgba(220, 53, 69, 0.02); }
+    
+    .table thead th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #adb5bd; border-bottom: 2px solid #e9ecef; padding-bottom: 15px; }
+
+    .license-plate-sm { background-color: #ffffff; border: 2px solid #ced4da; color: #212529; font-weight: 900; font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; padding: 2px 8px; border-radius: 6px; display: inline-block; letter-spacing: 1px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); }
+    .vehicle-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+    
+    .status-badge { padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 0.7rem; letter-spacing: 0.5px; border: 1px solid transparent; }
+    .status-pendiente { background-color: rgba(255, 193, 7, 0.15); color: #d39e00; border-color: rgba(255, 193, 7, 0.3); }
+    .status-proceso { background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; border-color: rgba(13, 110, 253, 0.2); }
+    .status-espera { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border-color: rgba(220, 53, 69, 0.2); }
+    .status-finalizado { background-color: rgba(25, 135, 84, 0.1); color: #198754; border-color: rgba(25, 135, 84, 0.2); }
+    .status-entregado { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; border-color: rgba(108, 117, 125, 0.2); }
+
+    .animate-pulse { animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+</style>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-4">
+    <div>
+        <h2 class="m-0 fw-bolder text-dark"><i class="bi bi-car-front-fill text-primary me-2"></i>Gestión de Taller</h2>
+        <p class="text-muted fw-bold small m-0">Sistema FIFO Automático. Atienda los vehículos en el orden listado.</p>
+    </div>
+    <a href="/taller/nueva" class="btn btn-success btn-lg fw-bold shadow rounded-pill px-4 hover-shadow">
+        <i class="bi bi-plus-circle-fill me-2"></i>Recepcionar Unidad
+    </a>
+</div>
+
+<ul class="nav nav-pills-custom d-flex" id="tallerTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active-blue" id="activos-tab" data-bs-toggle="pill" data-bs-target="#activos" type="button" role="tab" onclick="changeTabColor(this, 'active-blue')">
+            <i class="bi bi-tools me-2 fs-6"></i>En Taller (Activos)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="finalizados-tab" data-bs-toggle="pill" data-bs-target="#finalizados" type="button" role="tab" onclick="changeTabColor(this, 'active-green')">
+            <i class="bi bi-check-circle-fill me-2 fs-6"></i>Listos para Entrega
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="historial-tab" data-bs-toggle="pill" data-bs-target="#historial" type="button" role="tab" onclick="changeTabColor(this, 'active-gray')">
+            <i class="bi bi-archive-fill me-2 fs-6"></i>Historial
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="tallerTabContent">
+    <div class="tab-pane fade show active" id="activos" role="tabpanel">
+        <div class="card card-modern border-top border-4 border-primary">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-white">
+                            <tr>
+                                <th class="ps-4">Orden</th>
+                                <th>Tiempos y SLA</th>
+                                <th>Unidad</th>
+                                <th>Propietario / Mecánico</th>
+                                <th class="text-center">Estado Actual</th>
+                                <th class="text-end pe-4">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="border-top-0">
+                            {% for o in ordenes if o.estado in ['pendiente', 'en_proceso', 'esperando_repuesto'] %}
+                            <tr class="{% if loop.index == 1 and o.estado == 'esperando_repuesto' %}prioridad-alta{% endif %}" 
+                                data-fecha-promesa="{{ o.fecha_promesa.isoformat() if o.fecha_promesa else '' }}">
+                                
+                                <td class="ps-4">
+                                    <span class="fw-bold text-primary" style="letter-spacing: 1px;">OT-{{ "%04d"|format(o.id) }}</span>
+                                    {% if loop.index == 1 %}
+                                        <span class="badge bg-danger rounded-pill d-block mt-1" style="font-size: 0.6rem;">PRIORIDAD 1</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td>
+                                    <div class="text-dark small fw-bold"><i class="bi bi-box-arrow-in-right text-muted me-1"></i>Ingreso: {{ o.fecha_ingreso.strftime('%d/%m %H:%M') }}</div>
+                                    <div class="sla-status mt-1">
+                                        <!-- JS inyectará aquí si está retrasado o a tiempo -->
+                                    </div>
+                                </td>
+                                
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if o.tipo == 'Pesado' %}
+                                            <div class="vehicle-icon bg-warning bg-opacity-25 text-warning-emphasis me-3"><i class="bi bi-truck-front-fill"></i></div>
+                                        {% elif o.tipo == 'Maquinaria' %}
+                                            <div class="vehicle-icon bg-warning text-dark me-3"><i class="bi bi-cone-striped"></i></div>
+                                        {% else %}
+                                            <div class="vehicle-icon bg-primary bg-opacity-10 text-primary me-3"><i class="bi bi-car-front-fill"></i></div>
+                                        {% endif %}
+                                        
+                                        <div>
+                                            <div class="license-plate-sm mb-1">{{ o.placa }}</div>
+                                            <div class="text-muted fw-bold" style="font-size: 0.75rem; text-transform: uppercase;">{{ o.marca }} {{ o.modelo }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td>
+                                    <div class="fw-bold text-dark">{{ o.cliente }}</div>
+                                    <small class="text-muted fw-bold"><i class="bi bi-wrench-adjustable me-1 text-primary"></i>{{ o.mecanico }}</small>
+                                </td>
+                                
+                                <td class="text-center">
+                                    {% if o.estado == 'pendiente' %}
+                                        <span class="status-badge status-pendiente"><i class="bi bi-hourglass-split me-1"></i>PENDIENTE</span>
+                                    {% elif o.estado == 'en_proceso' %}
+                                        <span class="status-badge status-proceso animate-pulse"><i class="bi bi-gear-fill me-1"></i>EN PROCESO</span>
+                                    {% else %}
+                                        <span class="status-badge status-espera"><i class="bi bi-exclamation-triangle-fill me-1"></i>ESPERA REP.</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td class="text-end pe-4">
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        <a href="/taller/orden/{{ o.id }}" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm" title="Abrir Orden">
+                                            Abrir
+                                        </a>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-light border rounded-circle" type="button" data-bs-toggle="dropdown" style="width: 32px; height: 32px;">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                                                <li><a class="dropdown-item fw-bold text-warning" href="/taller/editar/{{ o.id }}"><i class="bi bi-pencil-fill me-2"></i>Editar Datos</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><button class="dropdown-item fw-bold text-danger" type="button" data-bs-toggle="modal" data-bs-target="#modalConfirmarAnular" data-url="{{ url_for('anular_orden', orden_id=o.id) }}" data-nombre="OT-{{ '%04d'|format(o.id) }}"><i class="bi bi-trash3-fill me-2"></i>Anular Orden</button></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="opacity-25 mb-3"><i class="bi bi-tools" style="font-size: 4rem;"></i></div>
+                                    <h5 class="fw-bold text-muted">Taller Despejado</h5>
+                                    <p class="text-muted small">No hay unidades pendientes ni en proceso actualmente.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pestañas de Finalizados e Historial (Se mantienen con su lógica pero heredan los estilos modernos) -->
+    <div class="tab-pane fade" id="finalizados" role="tabpanel">
+        <div class="card card-modern border-top border-4 border-success">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-white">
+                            <tr><th class="ps-4">Orden</th><th>Ingreso</th><th>Vehículo</th><th>Propietario</th><th class="text-center">Estado</th><th class="text-end pe-4">Acción de Caja</th></tr>
+                        </thead>
+                        <tbody class="border-top-0">
+                            {% for o in ordenes if o.estado == 'finalizado' %}
+                            <tr>
+                                <td class="ps-4"><span class="fw-bold text-success" style="letter-spacing: 1px;">OT-{{ "%04d"|format(o.id) }}</span></td>
+                                <td><div class="fw-bold text-dark">{{ o.fecha_ingreso.strftime('%d %b') }}</div></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="vehicle-icon bg-success bg-opacity-10 text-success me-3">
+                                            {% if o.tipo == 'Pesado' %}<i class="bi bi-truck"></i>{% else %}<i class="bi bi-car-front-fill"></i>{% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="license-plate-sm mb-1">{{ o.placa }}</div>
+                                            <div class="text-muted fw-bold" style="font-size: 0.75rem; text-transform: uppercase;">{{ o.marca }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="fw-bold text-dark">{{ o.cliente }}</td>
+                                <td class="text-center"><span class="status-badge status-finalizado"><i class="bi bi-check-circle-fill me-1"></i>FINALIZADO</span></td>
+                                <td class="text-end pe-4">
+                                    <a href="/caja/cobrar/{{ o.id }}" class="btn btn-success fw-bold rounded-pill shadow-sm px-4">
+                                        <i class="bi bi-cash-coin me-2"></i>Ir a Caja
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center py-5 text-muted"><i class="bi bi-emoji-smile fs-1 d-block mb-2 opacity-25"></i>No hay vehículos esperando cobro/entrega.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="historial" role="tabpanel">
+        <div class="card card-modern border-top border-4 border-secondary">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 text-muted">
+                        <thead class="bg-white">
+                            <tr><th class="ps-4">Orden</th><th>Fecha</th><th>Placa Oficial</th><th>Propietario</th><th class="text-center">Estado Final</th><th class="text-end pe-4">Expediente</th></tr>
+                        </thead>
+                        <tbody class="border-top-0">
+                            {% for o in ordenes if o.estado == 'entregado' %}
+                            <tr>
+                                <td class="ps-4"><span class="fw-bold text-secondary">OT-{{ "%04d"|format(o.id) }}</span></td>
+                                <td>{{ o.fecha_ingreso.strftime('%d/%m/%Y') }}</td>
+                                <td><div class="license-plate-sm" style="background: #f8f9fa;">{{ o.placa }}</div></td>
+                                <td class="fw-bold">{{ o.cliente }}</td>
+                                <td class="text-center"><span class="status-badge status-entregado"><i class="bi bi-journal-check me-1"></i>ENTREGADO</span></td>
+                                <td class="text-end pe-4">
+                                    <a href="/taller/orden/{{ o.id }}" class="btn btn-sm btn-light border rounded-pill px-3 fw-bold"><i class="bi bi-search me-2"></i>Revisar</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center py-5">Historial vacío.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Anular Orden -->
+<div class="modal fade" id="modalConfirmarAnular" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body text-center p-5">
+                <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex p-4 mb-4">
+                    <i class="bi bi-trash3-fill display-4 m-0"></i>
+                </div>
+                <h4 class="fw-bold mb-3">¿Anular esta Orden?</h4>
+                <p class="text-muted mb-2">Se anulará y eliminará el registro: <strong id="nombreOrdenModal" class="text-dark fs-5"></strong></p>
+                <div class="alert alert-danger bg-danger bg-opacity-10 border-0 small mt-4 mb-4 rounded-3">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Esta acción es irreversible.
+                </div>
+                <div class="d-flex justify-content-center gap-3">
+                    <button type="button" class="btn btn-light px-4 py-2 fw-bold border shadow-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <a id="btnConfirmarAnular" href="#" class="btn btn-danger px-4 py-2 fw-bold shadow">Sí, Anular Orden</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Cambio de colores en pestañas
+    function changeTabColor(clickedTab, colorClass) {
+        const tabs = document.querySelectorAll('.nav-pills-custom .nav-link');
+        tabs.forEach(tab => { tab.classList.remove('active-blue', 'active-green', 'active-gray'); });
+        clickedTab.classList.add(colorClass);
+    }
+
+    // Modal Anular
+    document.addEventListener('DOMContentLoaded', function () {
+        var modalAnular = document.getElementById('modalConfirmarAnular');
+        if (modalAnular) {
+            modalAnular.addEventListener('show.bs.modal', function (event) {
+                var boton = event.relatedTarget;
+                modalAnular.querySelector('#nombreOrdenModal').textContent = boton.getAttribute('data-nombre');
+                modalAnular.querySelector('#btnConfirmarAnular').setAttribute('href', boton.getAttribute('data-url'));
+            });
+        }
+
+        // MOTOR DE CÁLCULO SLA (Service Level Agreement)
+        document.querySelectorAll('tr[data-fecha-promesa]').forEach(row => {
+            const promesaIso = row.getAttribute('data-fecha-promesa');
+            const statusContainer = row.querySelector('.sla-status');
+            
+            if (promesaIso && statusContainer) {
+                const promesaDate = new Date(promesaIso);
+                const now = new Date();
+                
+                // Normalizamos a medianoche para comparar solo días (Opcional, pero efectivo)
+                const diffTime = Math.ceil((promesaDate - now) / (1000 * 60 * 60 * 24)); 
+
+                if (diffTime < 0) {
+                    statusContainer.innerHTML = `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>Retraso: ${Math.abs(diffTime)}d</span>`;
+                } else if (diffTime === 0 || diffTime === 1) {
+                    statusContainer.innerHTML = `<span class="badge bg-warning bg-opacity-10 text-dark border border-warning px-2 py-1"><i class="bi bi-clock-fill me-1"></i>Vence Hoy</span>`;
+                } else {
+                    statusContainer.innerHTML = `<span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1"><i class="bi bi-shield-check me-1"></i>Tiempo Restante: ${diffTime}d</span>`;
+                }
+            } else if (!promesaIso && statusContainer) {
+                statusContainer.innerHTML = `<span class="badge bg-light text-muted border px-2 py-1">SLA no definido</span>`;
+            }
+        });
+    });
+</script>
+{% endblock %}

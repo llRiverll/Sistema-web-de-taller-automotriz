@@ -1,0 +1,525 @@
+{% extends "base.html" %}
+{% block title %}OT #{{ "%04d"|format(orden.id) }} - Virgen de Chapi{% endblock %}
+{% block active_taller %}active{% endblock %}
+
+{% block content %}
+<style>
+    .card-modern { border: none; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.04); background: #ffffff; }
+    
+    .license-plate-lg { background-color: #ffffff; border: 2px solid #ced4da; color: #212529; font-weight: 900; font-family: 'Courier New', Courier, monospace; font-size: 2rem; padding: 8px 24px; border-radius: 8px; display: inline-block; letter-spacing: 4px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 10px; }
+
+    .stepper-wrapper { display: flex; justify-content: space-between; position: relative; margin: 2rem 0 3rem 0; padding: 0 20px; }
+    .stepper-wrapper::before { content: ""; position: absolute; top: 18px; left: 10%; right: 10%; height: 3px; background-color: #e9ecef; z-index: 1; }
+    .stepper-item { position: relative; display: flex; flex-direction: column; align-items: center; flex: 1; z-index: 2; }
+    .step-counter { width: 40px; height: 40px; border-radius: 50%; background-color: #e9ecef; color: #adb5bd; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px; border: 4px solid #fff; box-shadow: 0 0 0 1px #e9ecef; transition: all 0.3s; }
+    .step-name { font-size: 0.8rem; font-weight: 700; color: #adb5bd; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    .stepper-item.completed .step-counter { background-color: #198754; color: #fff; box-shadow: 0 0 0 1px #198754; }
+    .stepper-item.completed .step-name { color: #198754; }
+    .stepper-item.active .step-counter { background-color: #0d6efd; color: #fff; box-shadow: 0 0 0 1px #0d6efd; transform: scale(1.2); }
+    .stepper-item.active .step-name { color: #0d6efd; }
+    .stepper-item.warning .step-counter { background-color: #dc3545; color: #fff; box-shadow: 0 0 0 1px #dc3545; animation: pulse-red 2s infinite; }
+    .stepper-item.warning .step-name { color: #dc3545; }
+
+    .icon-soft-primary { background-color: rgba(13, 110, 253, 0.1); color: #0d6efd; padding: 8px 12px; border-radius: 10px; font-size: 1.2rem; }
+    .icon-soft-info { background-color: rgba(13, 202, 240, 0.1); color: #0dcaf0; padding: 8px 12px; border-radius: 10px; font-size: 1.2rem; }
+    
+    .receipt-box { background-color: #f8f9fa; border: 1px dashed #ced4da; border-radius: 12px; padding: 20px; }
+
+    .sticky-totals { position: sticky; bottom: 20px; z-index: 100; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 16px; box-shadow: 0 -5px 25px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; padding: 20px; animation: slideUp 0.5s ease-out; }
+    
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }
+
+    @media print { .d-print-none { display: none !important; } .card-modern { box-shadow: none !important; border: 1px solid #ddd; } .sticky-totals { position: static; box-shadow: none; border: none; } }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
+    <div class="d-flex align-items-center">
+        <a href="/taller" class="btn btn-light border shadow-sm rounded-circle d-flex align-items-center justify-content-center me-3 hover-shadow" style="width: 45px; height: 45px;">
+            <i class="bi bi-arrow-left fs-5 text-dark"></i>
+        </a>
+        <div id="header-orden" data-fecha-promesa="{{ orden.fecha_promesa.isoformat() if orden.fecha_promesa else '' }}">
+            <h2 class="m-0 fw-bolder text-dark d-flex align-items-center gap-2">
+                <i class="bi bi-tools text-primary"></i>Orden #{{ "%04d"|format(orden.id) }}
+            </h2>
+            <div class="d-flex align-items-center mt-1 gap-2">
+                <span class="text-muted fw-bold small"><i class="bi bi-calendar-event me-1"></i>Ingreso: {{ orden.fecha_ingreso.strftime('%d/%m/%Y %H:%M') }}</span>
+                <span class="text-muted small">|</span>
+                <span id="sla-badge-detail"></span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-flex gap-2 align-items-center">
+        <button class="btn btn-outline-dark fw-bold rounded-pill px-4 shadow-sm" onclick="window.print()">
+            <i class="bi bi-printer-fill me-2"></i>Imprimir
+        </button>
+        
+        {% if orden.estado == 'pendiente' %}
+        <form method="POST" class="d-inline">
+            <input type="hidden" name="accion" value="iniciar_trabajo">
+            <button type="submit" class="btn btn-primary fw-bold rounded-pill px-4 shadow-sm animate__animated animate__pulse animate__infinite">
+                <i class="bi bi-play-circle-fill me-2"></i>INICIAR REVISIÓN
+            </button>
+        </form>
+        
+        {% elif orden.estado == 'esperando_repuesto' %}
+            <button class="btn btn-danger fw-bold rounded-pill px-4 shadow-sm" disabled>
+                <i class="bi bi-pause-circle-fill me-2"></i>PAUSADO POR REPUESTO
+            </button>
+            <button class="btn btn-success fw-bold rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalFinalizar">
+                <i class="bi bi-check-circle-fill me-2"></i>FINALIZAR
+            </button>
+            
+        {% elif orden.estado == 'en_proceso' %}
+            <button class="btn btn-warning fw-bold text-dark rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalFaltaRepuesto{{ orden.id }}">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>FALTA REPUESTO
+            </button>
+            <button class="btn btn-success fw-bold rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalFinalizar">
+                <i class="bi bi-check-circle-fill me-2"></i>FINALIZAR TRABAJO
+            </button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card card-modern mb-4 pt-2 pb-3 d-print-none">
+    <div class="stepper-wrapper">
+        <div class="stepper-item completed">
+            <div class="step-counter"><i class="bi bi-clipboard-check"></i></div>
+            <div class="step-name">Recepción</div>
+        </div>
+        
+        <div class="stepper-item {% if orden.estado in ['en_proceso', 'finalizado', 'entregado'] %}completed{% elif orden.estado == 'esperando_repuesto' %}warning{% elif orden.estado == 'pendiente' %}active{% endif %}">
+            <div class="step-counter">{% if orden.estado == 'esperando_repuesto' %}<i class="bi bi-pause-fill"></i>{% else %}<i class="bi bi-tools"></i>{% endif %}</div>
+            <div class="step-name">{% if orden.estado == 'esperando_repuesto' %}En Espera{% else %}En Taller{% endif %}</div>
+        </div>
+        
+        <div class="stepper-item {% if orden.estado in ['finalizado', 'entregado'] %}completed{% elif orden.estado == 'en_proceso' %}active{% endif %}">
+            <div class="step-counter"><i class="bi bi-check-all"></i></div>
+            <div class="step-name">Finalizado</div>
+        </div>
+        
+        <div class="stepper-item {% if orden.estado == 'entregado' %}completed{% elif orden.estado == 'finalizado' %}active{% endif %}">
+            <div class="step-counter"><i class="bi bi-cash-coin"></i></div>
+            <div class="step-name">Cobrado</div>
+        </div>
+    </div>
+</div>
+
+{% if orden.estado == 'esperando_repuesto' %}
+<div class="alert alert-danger shadow-sm border-0 border-start border-danger border-4 mb-4 rounded-3 d-print-none d-flex align-items-center">
+    <i class="bi bi-exclamation-octagon-fill display-4 text-danger me-4"></i>
+    <div>
+        <h5 class="fw-bold text-danger mb-1">Trabajo Pausado</h5>
+        <p class="mb-0 text-dark">El mecánico ha detenido el trabajo. Falta el repuesto: <strong class="text-danger fs-5">{{ orden.repuesto_faltante }}</strong></p>
+        <small class="text-muted"><i class="bi bi-clock me-1"></i>Reportado el: {{ orden.fecha_pausa }}</small>
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card card-modern h-100 border-top border-4 border-primary">
+            <div class="card-body p-4 text-center">
+                <h6 class="fw-bold text-primary mb-4 text-start text-uppercase" style="letter-spacing: 1px;">
+                    <i class="bi bi-car-front-fill me-2"></i>Ficha de Unidad
+                </h6>
+                
+                <div class="bg-light rounded-4 p-4 mb-4 border border-light-subtle">
+                    <div class="license-plate-lg">{{ orden.placa }}</div>
+                    <div class="text-muted fw-bold fs-5 mt-2 text-uppercase">{{ orden.marca }} {{ orden.modelo }}</div>
+                </div>
+                
+                <div class="d-flex align-items-center text-start mb-3 pb-3 border-bottom">
+                    <i class="bi bi-person-fill text-muted fs-3 me-3"></i>
+                    <div>
+                        <small class="text-muted fw-bold text-uppercase d-block" style="font-size: 0.7rem;">Cliente / Propietario</small>
+                        <span class="fw-bold text-dark">{{ orden.cliente }}</span>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center text-start mb-4">
+                    <i class="bi bi-wrench-adjustable-circle text-primary fs-3 me-3"></i>
+                    <div>
+                        <small class="text-muted fw-bold text-uppercase d-block" style="font-size: 0.7rem;">Mecánico a cargo</small>
+                        <span class="fw-bold text-primary">{{ orden.mecanico }}</span>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning bg-warning bg-opacity-10 border-start border-warning border-4 text-start rounded-3 shadow-sm p-3 mb-0">
+                    <h6 class="alert-heading fw-bold text-dark mb-2"><i class="bi bi-chat-square-quote-fill text-warning me-2"></i>Falla Reportada:</h6>
+                    <p class="mb-0 small text-dark fst-italic" id="textoFallaCliente">"{{ orden.falla_reportada }}"</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card card-modern h-100 position-relative">
+            <div class="card-header bg-transparent py-4 border-bottom d-flex justify-content-between align-items-center px-4">
+                <h6 class="fw-bold text-dark text-uppercase m-0" style="letter-spacing: 1px;">
+                    <i class="bi bi-list-check text-success me-2 fs-5 align-middle"></i>Trabajos y Repuestos
+                </h6>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill fs-6">
+                    Items: {{ detalles|length }}
+                </span>
+            </div>
+            <div class="card-body p-4 d-flex flex-column">
+                
+                {% if orden.estado not in ['finalizado', 'entregado'] %}
+                {% if orden.estado != 'pendiente' %}
+                <form method="POST" class="bg-light border rounded-4 mb-4 p-3 d-print-none shadow-sm">
+                    <input type="hidden" name="accion" value="agregar_item">
+                    <label class="form-label fw-bold text-primary small text-uppercase mb-2"><i class="bi bi-plus-circle-fill me-1"></i> Agregar Insumo / Servicio</label>
+                    <div class="input-group input-group-lg shadow-sm rounded-3 overflow-hidden border">
+                        <select name="producto_id" id="select_producto" class="form-select border-0" required style="flex: 1;">
+                            <option value="">Buscar en inventario (Repuestos o Servicios)...</option>
+                            {% for p in productos %}
+                            <option value="{{ p.id }}">{{ p.nombre }} ({{ p.codigo }}) - S/ {{ "%.2f"|format(p.precio_venta) }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="number" name="cantidad" class="form-control border-0 border-start bg-white" value="1" min="1" style="max-width: 100px;" placeholder="Cant.">
+                        <button type="submit" class="btn btn-primary fw-bold px-4"><i class="bi bi-plus-lg fs-5"></i></button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="alert alert-info bg-info bg-opacity-10 border-0 shadow-sm d-print-none rounded-3 d-flex align-items-center mb-4">
+                    <i class="bi bi-info-circle-fill text-info fs-3 me-3"></i> 
+                    <div class="text-dark">Haga clic en <strong>"INICIAR REVISIÓN"</strong> en la parte superior para comenzar a agregar repuestos y servicios.</div>
+                </div>
+                {% endif %}
+                {% endif %}
+
+                <div class="table-responsive rounded-3 border mb-5">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light text-muted small text-uppercase" style="letter-spacing: 0.5px;">
+                            <tr>
+                                <th class="text-center py-3 border-0">Cant.</th>
+                                <th class="border-0">Descripción del Item</th>
+                                <th class="text-end border-0">P. Unit.</th>
+                                <th class="text-end border-0">Subtotal</th>
+                                {% if orden.estado not in ['finalizado', 'entregado'] %}<th class="text-center d-print-none border-0"></th>{% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in detalles %}
+                            <tr>
+                                <td class="text-center fw-bold bg-light" style="width: 60px;">{{ d.cantidad }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center py-1">
+                                        {% if 'REP-' in d.codigo %}
+                                            <span class="icon-soft-primary me-3"><i class="bi bi-box-seam-fill"></i></span>
+                                        {% else %}
+                                            <span class="icon-soft-info me-3"><i class="bi bi-wrench-adjustable-circle-fill"></i></span>
+                                        {% endif %}
+                                        <div>
+                                            <span class="fw-bold text-dark d-block lh-1 mb-1">{{ d.producto }}</span>
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border">{{ d.codigo }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-end text-muted">S/ {{ "%.2f"|format(d.precio_unitario) }}</td>
+                                <td class="text-end fw-bold text-dark fs-6">S/ {{ "%.2f"|format(d.subtotal) }}</td>
+                                
+                                {% if orden.estado not in ['finalizado', 'entregado'] %}
+                                <td class="text-center d-print-none">
+                                    <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-circle" style="width: 35px; height: 35px;"
+                                            data-bs-toggle="modal" data-bs-target="#modalEliminarItem"
+                                            data-url="{{ url_for('eliminar_detalle_orden', detalle_id=d.id) }}"
+                                            data-nombre="{{ d.producto }}" title="Quitar Item">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-center text-muted py-5"><i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Aún no se han agregado repuestos ni servicios.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-auto sticky-totals receipt-box d-print-none">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 border-end">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted fw-bold small text-uppercase">Subtotal:</span>
+                                <span class="fw-bold text-dark font-monospace">S/ {{ "%.2f"|format(subtotal) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted fw-bold small text-uppercase">I.G.V. (18%):</span>
+                                <span class="fw-bold text-dark font-monospace">S/ {{ "%.2f"|format(igv) }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <span class="fw-bolder h6 m-0 text-dark d-block">TOTAL NETO</span>
+                            <span class="fw-bolder display-6 text-success m-0 font-monospace">S/ {{ "%.2f"|format(total) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================= -->
+<!-- MODALES DEL SISTEMA -->
+<!-- ======================================================= -->
+
+<!-- Modal Eliminar Item -->
+<div class="modal fade" id="modalEliminarItem" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-white border-0 shadow-lg rounded-4">
+            <div class="modal-body text-center p-5">
+                <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex p-4 mb-4">
+                    <i class="bi bi-trash3-fill text-danger display-4 m-0"></i>
+                </div>
+                <h3 class="fw-bold text-dark mb-3">¿Quitar este item?</h3>
+                <p class="text-muted mb-2">Se eliminará: <strong id="nombreItemModal" class="text-dark fs-5">...</strong></p>
+                <div class="alert alert-warning bg-warning bg-opacity-10 border-0 text-warning small mt-4 mb-4 rounded-3">
+                    <i class="bi bi-info-circle me-1"></i> Si es un repuesto, el stock se devolverá automáticamente al inventario.
+                </div>
+                <div class="d-flex justify-content-center gap-3">
+                    <button type="button" class="btn btn-light px-4 py-2 fw-bold shadow-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <a id="btnConfirmarEliminarItem" href="#" class="btn btn-danger px-4 py-2 fw-bold shadow">Sí, Quitar Item</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL INTELIGENTE: REPORTAR FALTA DE REPUESTO -->
+<div class="modal fade" id="modalFaltaRepuesto{{ orden.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form id="formIncidencia" method="POST" action="/ordenes/reportar_falta" class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <input type="hidden" name="orden_id" value="{{ orden.id }}">
+            
+            <!-- Campo oculto donde JS unirá toda la información -->
+            <input type="hidden" name="repuesto_faltante" id="inputFinalRepuesto">
+
+            <div class="modal-header bg-warning text-dark border-0 p-4">
+                <h5 class="modal-title fw-bold fs-4"><i class="bi bi-cone-striped me-2"></i>Pausar Trabajo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body p-4 bg-light">
+                <div class="alert alert-warning bg-warning bg-opacity-10 border-0 text-dark small mb-4 rounded-3">
+                    <i class="bi bi-info-circle-fill me-1 text-warning"></i> El vehículo pasará a <strong>"Esperando Repuesto"</strong> y se alertará a Administración.
+                </div>
+
+                <!-- 1. TIPO DE REPUESTO -->
+                <label class="form-label fw-bold text-dark mb-2">1. Tipo de repuesto faltante:</label>
+                <div class="d-flex gap-2 mb-3">
+                    <input type="radio" class="btn-check" name="tipo_repuesto" id="tipo_agotado" value="[AGOTADO EN CATÁLOGO]" autocomplete="off" checked onchange="toggleEntradaRepuesto()">
+                    <label class="btn btn-outline-dark fw-bold text-start p-2 w-100 rounded-3" for="tipo_agotado">
+                        <i class="bi bi-box-seam text-warning me-1"></i> Está Agotado
+                    </label>
+
+                    <input type="radio" class="btn-check" name="tipo_repuesto" id="tipo_especial" value="[REPUESTO ESPECIAL]" autocomplete="off" onchange="toggleEntradaRepuesto()">
+                    <label class="btn btn-outline-dark fw-bold text-start p-2 w-100 rounded-3" for="tipo_especial">
+                        <i class="bi bi-star-fill text-primary me-1"></i> Especial / Nuevo
+                    </label>
+                </div>
+
+                <!-- 2. DESCRIPCIÓN DINÁMICA -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark" id="label_descripcion">2. Seleccione el repuesto agotado:</label>
+                    <div class="input-group input-group-lg shadow-sm">
+                        <span class="input-group-text bg-white border-warning text-warning"><i class="bi bi-search"></i></span>
+                        
+                        <!-- Select para Agotados -->
+                        <select class="form-select border-warning" id="select_agotados">
+                            <option value="">-- Elija un repuesto de la lista --</option>
+                            {% for p in productos_agotados %}
+                                <option value="{{ p.nombre }} ({{ p.codigo }})">{{ p.nombre }} ({{ p.codigo }})</option>
+                            {% endfor %}
+                            {% if not productos_agotados %}
+                                <option value="" disabled>No hay repuestos registrados con stock 0</option>
+                            {% endif %}
+                        </select>
+
+                        <!-- Input texto libre para Especiales -->
+                        <input type="text" class="form-control border-warning" id="desc_repuesto" placeholder="Ej: Alternador Bosch 24V..." style="display: none;">
+                    </div>
+                </div>
+
+                <!-- 3. URGENCIA -->
+                <label class="form-label fw-bold text-dark mb-2">3. Nivel de Urgencia:</label>
+                <select class="form-select border-warning shadow-sm" id="nivel_urgencia">
+                    <option value="🔴 URGENTE">🔴 URGENTE (El cliente necesita el auto hoy)</option>
+                    <option value="🟡 NORMAL" selected>🟡 NORMAL (Para mañana / Sin prisa)</option>
+                </select>
+            </div>
+            
+            <div class="modal-footer border-0 bg-white p-4 d-flex justify-content-between">
+                <button type="button" class="btn btn-light px-4 py-2 fw-bold text-muted border shadow-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" onclick="procesarFormulario()" class="btn btn-warning px-4 py-2 fw-bold text-dark shadow-sm">
+                    <i class="bi bi-bell-fill me-2"></i>Generar Alerta
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Finalizar Orden con IA -->
+<div class="modal fade" id="modalFinalizar" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <form method="POST" class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <input type="hidden" name="accion" value="finalizar_orden">
+            <div class="modal-header bg-success text-white p-4 border-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-check-circle-fill me-2"></i>Finalizar Orden y Redactar Informe</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <label class="form-label fw-bold text-dark m-0">Informe Técnico (Para el cliente):</label>
+                        <button type="button" class="btn btn-dark fw-bold shadow-sm rounded-pill px-3 py-2" id="btnGenerarIA" onclick="generarDiagnosticoIA()">
+                            <i class="bi bi-stars text-info me-1 fs-5 align-middle"></i> Redactar Correo con IA
+                        </button>
+                    </div>
+                    <textarea name="diagnostico_final" id="diagnostico_final" class="form-control rounded-3 border shadow-sm p-3" rows="6" required placeholder="1. Escriba sus notas técnicas aquí.&#10;2. Luego presione el botón 'Redactar Correo con IA' para formatearlo."></textarea>
+                    
+                    <div id="ia_loading" class="text-primary small mt-3 fw-bold p-2 bg-primary bg-opacity-10 rounded-3 border border-primary-subtle" style="display: none;">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        El Asistente Virtual está redactando el correo profesional...
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-white border-0 p-4">
+                <button type="button" class="btn btn-light fw-bold border shadow-sm px-4 py-2" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success fw-bold shadow px-4 py-2"><i class="bi bi-save2-fill me-2"></i>GUARDAR Y ENVIAR AVISO</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    $(document).ready(function() {
+        $('#select_producto').select2({ theme: "bootstrap-5", dropdownParent: $('body') });
+
+        var modalEliminar = document.getElementById('modalEliminarItem');
+        if (modalEliminar) {
+            modalEliminar.addEventListener('show.bs.modal', function (event) {
+                var boton = event.relatedTarget;
+                var url = boton.getAttribute('data-url');
+                var nombre = boton.getAttribute('data-nombre');
+                modalEliminar.querySelector('#nombreItemModal').textContent = nombre;
+                modalEliminar.querySelector('#btnConfirmarEliminarItem').setAttribute('href', url);
+            });
+        }
+
+        // MOTOR DE CÁLCULO SLA (Service Level Agreement)
+        const header = document.getElementById('header-orden');
+        const promesaIso = header.getAttribute('data-fecha-promesa');
+        const badgeContainer = document.getElementById('sla-badge-detail');
+        
+        if (promesaIso && badgeContainer) {
+            const promesaDate = new Date(promesaIso);
+            const now = new Date();
+            const diffTime = Math.ceil((promesaDate - now) / (1000 * 60 * 60 * 24));
+
+            if (diffTime < 0) {
+                badgeContainer.innerHTML = `<span class="badge bg-danger fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i>Retraso: ${Math.abs(diffTime)} días</span>`;
+            } else if (diffTime === 0 || diffTime === 1) {
+                badgeContainer.innerHTML = `<span class="badge bg-warning text-dark fw-bold"><i class="bi bi-clock-fill me-1"></i>Vence Hoy</span>`;
+            } else {
+                badgeContainer.innerHTML = `<span class="badge bg-success fw-bold"><i class="bi bi-shield-check me-1"></i>Tiempo: ${diffTime} días</span>`;
+            }
+        }
+    });
+
+    // 1. FUNCIÓN PARA INTERCAMBIAR ENTRE SELECT Y TEXTO
+    function toggleEntradaRepuesto() {
+        const esAgotado = document.getElementById('tipo_agotado').checked;
+        const selectAgotados = document.getElementById('select_agotados');
+        const inputEspecial = document.getElementById('desc_repuesto');
+        const labelDesc = document.getElementById('label_descripcion');
+
+        if (esAgotado) {
+            selectAgotados.style.display = 'block';
+            inputEspecial.style.display = 'none';
+            labelDesc.innerText = "2. Seleccione el repuesto agotado:";
+        } else {
+            selectAgotados.style.display = 'none';
+            inputEspecial.style.display = 'block';
+            labelDesc.innerText = "2. Escriba el código o nombre exacto:";
+        }
+    }
+
+    // 2. FUNCIÓN PARA PROCESAR EL FORMULARIO
+    function procesarFormulario() {
+        let tipo = document.querySelector('input[name="tipo_repuesto"]:checked').value;
+        let esAgotado = document.getElementById('tipo_agotado').checked;
+        let urgencia = document.getElementById('nivel_urgencia').value;
+        let descripcionFinal = "";
+
+        if (esAgotado) {
+            descripcionFinal = document.getElementById('select_agotados').value;
+            if(descripcionFinal === "") {
+                alert("Por favor seleccione un repuesto agotado de la lista.");
+                return;
+            }
+        } else {
+            descripcionFinal = document.getElementById('desc_repuesto').value;
+            if(descripcionFinal.trim() === "") {
+                alert("Por favor escriba el nombre de la pieza especial.");
+                return;
+            }
+        }
+
+        let textoFinal = `${urgencia} - ${tipo}: ${descripcionFinal}`;
+        document.getElementById('inputFinalRepuesto').value = textoFinal;
+        document.getElementById('formIncidencia').submit();
+    }
+
+    // 3. FUNCIÓN DE IA MEJORADA
+    function generarDiagnosticoIA() {
+        const notasMecanico = document.getElementById('diagnostico_final').value;
+        const btnIA = document.getElementById('btnGenerarIA');
+        const loading = document.getElementById('ia_loading');
+        const textarea = document.getElementById('diagnostico_final');
+
+        if (!notasMecanico.trim()) {
+            alert("Por favor, escriba primero sus notas técnicas para que la IA pueda redactar el correo.");
+            return;
+        }
+
+        btnIA.disabled = true;
+        loading.style.display = 'block';
+
+        fetch('/api/ia/diagnostico', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                falla: notasMecanico,
+                cliente: "{{ orden.cliente }}", 
+                vehiculo: "{{ orden.placa }}"
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert("Error de IA: " + data.error);
+            } else {
+                textarea.value = data.diagnostico;
+                textarea.style.backgroundColor = '#e8f4f8';
+                setTimeout(() => { textarea.style.backgroundColor = ''; }, 1000);
+            }
+        })
+        .catch(error => {
+            alert("Error de conexión al generar IA.");
+            console.error(error);
+        })
+        .finally(() => {
+            btnIA.disabled = false;
+            loading.style.display = 'none';
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% block title %}Checkout OT-{{ "%04d"|format(orden.id) }} - Virgen de Chapi{% endblock %}
+
+{% block content %}
+<style>
+    /* FONDO Y TIPOGRAFÍA */
+    body { background-color: #f8fafc; }
+    .text-slate { color: #334155; }
+    .text-money { font-family: 'Courier New', Courier, monospace; font-weight: 900; }
+
+    /* =========================================
+       TICKET DE RESUMEN (PANEL IZQUIERDO)
+       ========================================= */
+    .ticket-panel {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        border: 1px solid #f1f5f9;
+        position: relative;
+    }
+    
+    /* Borde superior estilo recibo */
+    .ticket-panel::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
+        background: linear-gradient(90deg, #cbd5e1 0%, #94a3b8 100%);
+        border-radius: 16px 16px 0 0;
+    }
+
+    .ticket-divider { border-bottom: 2px dashed #e2e8f0; margin: 1.5rem 0; }
+    .ticket-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px; }
+    .ticket-value { font-size: 0.95rem; font-weight: 700; color: #1e293b; }
+    
+    .item-row { display: flex; justify-content: space-between; margin-bottom: 0.75rem; color: #475569; }
+    .item-qty { font-weight: 800; color: #0f172a; margin-right: 0.5rem; }
+
+    /* =========================================
+       PANEL DE PAGOS Y BOTONES (PANEL DERECHO)
+       ========================================= */
+    .payment-panel {
+        background: transparent;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .section-title { font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-bottom: 1.2rem; }
+
+    /* Tarjetas de Selección Ocultas */
+    .option-input { display: none; }
+    .option-card {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 1.5rem 1rem;
+        background: #ffffff;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        color: #64748b;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+        height: 100%;
+    }
+    
+    .option-card i { font-size: 2.5rem; margin-bottom: 0.8rem; transition: transform 0.2s; }
+    .option-card span { font-size: 0.9rem; font-weight: 700; text-align: center; }
+    
+    .option-card:hover { border-color: #cbd5e1; transform: translateY(-3px); box-shadow: 0 10px 15px rgba(0,0,0,0.03); }
+
+    /* Estados Activos (Seleccionados) */
+    .option-input:checked + .option-card.card-comprobante {
+        border-color: #0284c7; background: #f0f9ff; color: #0284c7;
+        box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.1);
+    }
+    
+    .option-input:checked + .option-card.card-pago {
+        border-color: #10b981; background: #ecfdf5; color: #10b981;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    }
+    
+    .option-input:checked + .option-card i { transform: scale(1.15); }
+
+    /* Botón Gigante de Cobrar */
+    .btn-checkout {
+        background: #10b981; /* Verde esmeralda */
+        color: white;
+        border: none;
+        border-radius: 16px;
+        padding: 1.5rem;
+        font-size: 1.2rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        transition: all 0.2s;
+        margin-top: auto; /* Empuja el botón al fondo */
+    }
+    .btn-checkout:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 15px 30px rgba(16, 185, 129, 0.4); }
+
+    /* Íconos del Modal */
+    .modal-icon-container { width: 80px; height: 80px; background: #ecfdf5; color: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem auto; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center">
+        <a href="/caja" class="btn btn-white bg-white border shadow-sm rounded-circle p-3 me-3 text-slate hover-shadow transition" title="Volver a Caja">
+            <i class="bi bi-arrow-left fs-5"></i>
+        </a>
+        <div>
+            <h2 class="m-0 fw-bolder text-dark">Punto de Venta (POS)</h2>
+            <div class="mt-1">
+                <span class="badge bg-dark px-3 py-2 fs-6 rounded-pill shadow-sm">ORDEN: OT-{{ "%04d"|format(orden.id) }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 align-items-stretch">
+    
+    <div class="col-lg-5">
+        <div class="ticket-panel h-100 d-flex flex-column">
+            
+            <div class="text-center mb-4">
+                <i class="bi bi-receipt-cutoff display-4 text-slate mb-2"></i>
+                <h4 class="fw-bolder text-dark">Resumen de Venta</h4>
+                <p class="text-muted small mb-0">{{ orden.fecha_ingreso.strftime('%d de %B, %Y') if orden.fecha_ingreso else '' }}</p>
+            </div>
+            
+            <div class="d-flex justify-content-between mb-2">
+                <span class="ticket-label">Cliente:</span>
+                <span class="ticket-value text-primary text-end">{{ orden.cliente }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span class="ticket-label">Doc/RUC:</span>
+                <span class="ticket-value">{{ orden.dni_ruc }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span class="ticket-label">Vehículo:</span>
+                <span class="badge bg-secondary font-monospace px-2 py-1">{{ orden.placa }}</span>
+            </div>
+
+            <div class="ticket-divider"></div>
+            
+            <div class="ticket-label mb-3">Detalle del Servicio:</div>
+            <div class="mb-auto">
+                {% for d in detalles %}
+                <div class="item-row">
+                    <div class="text-truncate pe-3" style="max-width: 75%;">
+                        <span class="item-qty">{{ d.cantidad }}x</span> {{ d.nombre }}
+                    </div>
+                    <div class="fw-bold">S/ {{ "%.2f"|format(d.subtotal) }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="ticket-divider"></div>
+
+            <div class="d-flex justify-content-between mb-1">
+                <span class="ticket-label">OP. GRAVADAS:</span>
+                <span class="text-muted fw-bold">S/ {{ "%.2f"|format(subtotal) }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3">
+                <span class="ticket-label">I.G.V. (18%):</span>
+                <span class="text-muted fw-bold">S/ {{ "%.2f"|format(igv) }}</span>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded-3 border">
+                <span class="fs-5 fw-bolder text-dark">TOTAL</span>
+                <span class="fs-2 text-money text-success">S/ {{ "%.2f"|format(total) }}</span>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <form method="POST" id="formCobro" class="payment-panel">
+            <input type="hidden" name="monto_total" value="{{ total }}">
+
+            <div class="section-title"><i class="bi bi-file-earmark-text text-primary me-2"></i>1. Emisión de Comprobante</div>
+            <div class="row g-3 mb-5">
+                <div class="col-6">
+                    <input type="radio" class="option-input" name="tipo_comprobante" id="doc_boleta" value="boleta" checked>
+                    <label for="doc_boleta" class="option-card card-comprobante">
+                        <i class="bi bi-person-vcard"></i>
+                        <span>BOLETA ELECTRÓNICA</span>
+                    </label>
+                </div>
+                <div class="col-6">
+                    <input type="radio" class="option-input" name="tipo_comprobante" id="doc_factura" value="factura">
+                    <label for="doc_factura" class="option-card card-comprobante">
+                        <i class="bi bi-building"></i>
+                        <span>FACTURA ELECTRÓNICA</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="section-title"><i class="bi bi-wallet2 text-success me-2"></i>2. Medio de Pago</div>
+            <div class="row g-3 mb-4">
+                <div class="col-4">
+                    <input type="radio" class="option-input" name="metodo_pago" id="pay_cash" value="efectivo" checked>
+                    <label for="pay_cash" class="option-card card-pago">
+                        <i class="bi bi-cash-stack"></i>
+                        <span>Efectivo</span>
+                    </label>
+                </div>
+                <div class="col-4">
+                    <input type="radio" class="option-input" name="metodo_pago" id="pay_card" value="tarjeta">
+                    <label for="pay_card" class="option-card card-pago">
+                        <i class="bi bi-credit-card-2-front"></i>
+                        <span>Tarjeta (POS)</span>
+                    </label>
+                </div>
+                <div class="col-4">
+                    <input type="radio" class="option-input" name="metodo_pago" id="pay_transfer" value="transferencia">
+                    <label for="pay_transfer" class="option-card card-pago">
+                        <i class="bi bi-phone-vibrate"></i>
+                        <span>Yape / Plin</span>
+                    </label>
+                </div>
+            </div>
+
+            <button type="button" class="btn-checkout w-100 d-flex justify-content-between align-items-center mt-auto" id="btnAbrirModal">
+                <span><i class="bi bi-shield-check me-2"></i> PROCESAR PAGO</span>
+                <span class="text-money fs-3">S/ {{ "%.2f"|format(total) }}</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="modalConfirmacion" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+      
+      <div class="modal-body text-center p-5">
+        <div class="modal-icon-container">
+            <i class="bi bi-cash-coin"></i>
+        </div>
+        <h3 class="fw-bolder text-dark mb-3">¿Confirmar Operación?</h3>
+        
+        <p class="text-muted mb-4 fs-5">
+            Se registrará el cobro por <strong class="text-success text-money fs-4 d-block mt-2 mb-2">S/ {{ "%.2f"|format(total) }}</strong>
+        </p>
+
+        <div class="bg-light rounded-3 p-3 mb-4 text-start border">
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted fw-bold small">COMPROBANTE:</span>
+                <span class="fw-bold text-primary text-uppercase" id="modalResumenComprobante">Boleta</span>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span class="text-muted fw-bold small">MÉTODO PAGO:</span>
+                <span class="fw-bold text-success text-uppercase" id="modalResumenMetodo">Efectivo</span>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <button type="button" class="btn btn-light border fw-bold px-4 py-2 rounded-pill shadow-sm text-secondary" data-bs-dismiss="modal">
+                Cancelar
+            </button>
+            <button type="button" class="btn btn-success fw-bold px-5 py-2 rounded-pill shadow" id="btnConfirmarFinal">
+                <i class="bi bi-check-circle-fill me-2"></i> Sí, Cobrar
+            </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const btnAbrirModal = document.getElementById('btnAbrirModal');
+        const btnConfirmarFinal = document.getElementById('btnConfirmarFinal');
+        const formCobro = document.getElementById('formCobro');
+        const modalUI = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+
+        const modalResumenComprobante = document.getElementById('modalResumenComprobante');
+        const modalResumenMetodo = document.getElementById('modalResumenMetodo');
+
+        // Cuando el usuario presiona "PROCESAR PAGO"
+        btnAbrirModal.addEventListener('click', function() {
+            
+            // 1. Leer qué seleccionó el usuario
+            const comprobanteSeleccionado = document.querySelector('input[name="tipo_comprobante"]:checked').value;
+            const metodoSeleccionado = document.querySelector('input[name="metodo_pago"]:checked').value;
+
+            // 2. Traducir el texto para el Modal
+            modalResumenComprobante.innerText = comprobanteSeleccionado === 'boleta' ? 'Boleta Electrónica' : 'Factura Electrónica';
+            
+            if(metodoSeleccionado === 'efectivo') modalResumenMetodo.innerText = 'Efectivo';
+            else if(metodoSeleccionado === 'tarjeta') modalResumenMetodo.innerText = 'Tarjeta (POS)';
+            else modalResumenMetodo.innerText = 'Yape / Plin';
+
+            // 3. Mostrar el Modal
+            modalUI.show();
+        });
+
+        // Cuando el usuario presiona "SÍ, COBRAR" dentro del Modal
+        btnConfirmarFinal.addEventListener('click', function() {
+            
+            // Efecto de carga en el botón
+            btnConfirmarFinal.disabled = true;
+            btnConfirmarFinal.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Procesando...';
+            
+            // Enviar el formulario a Python
+            formCobro.submit();
+        });
+    });
+</script>
+{% endblock %}

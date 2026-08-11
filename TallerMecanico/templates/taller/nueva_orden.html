@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Nueva Orden - Virgen de Chapi{% endblock %}
+{% block active_taller %}active{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilo Corporativo y Estructurado */
+    .card-enterprise { border-radius: 12px; border: 1px solid rgba(0,0,0,0.08); background-color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+    
+    /* Panel lateral colorido para NUEVA ORDEN (Verde Esmeralda/Turquesa) */
+    .sidebar-info-reception { background: linear-gradient(135deg, #198754 0%, #20c997 100%); border-radius: 12px; color: white; padding: 2.5rem 2rem; height: 100%; box-shadow: 0 4px 15px rgba(25, 135, 84, 0.2); display: flex; flex-direction: column; justify-content: space-between; }
+    .sidebar-icon-reception { font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.9; }
+    
+    /* Estilos del formulario */
+    .form-control, .form-select { border-radius: 6px; padding: 12px 15px; border: 1px solid #ced4da; font-weight: 500; background-color: #fff; }
+    .form-control:focus, .form-select:focus { border-color: #198754; box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.15); }
+    .input-group-text { background-color: #f8f9fa; border-right: none; color: #495057; font-size: 1.1rem; }
+    .input-group .form-control, .input-group .form-select { border-left: none; padding-left: 0; }
+    .form-label { font-size: 0.8rem; letter-spacing: 0.5px; text-transform: uppercase; color: #495057; font-weight: 700; }
+    
+    /* Separadores de sección (Acento Verde) */
+    .section-header-reception { background-color: #f8f9fa; padding: 12px 20px; border-left: 4px solid #198754; font-weight: 800; color: #212529; margin-bottom: 1.5rem; border-radius: 4px; display: flex; align-items: center; letter-spacing: 0.5px; }
+
+    /* Ajustes visuales para Select2 dentro de este diseño */
+    .select2-container--bootstrap-5 .select2-selection { min-height: 48px; padding-top: 8px; border-radius: 0 6px 6px 0; border: 1px solid #ced4da; border-left: none; }
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered { font-weight: 600; color: #212529; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+    <h2 class="m-0 fw-bold text-dark"><i class="bi bi-clipboard-plus-fill text-success me-2"></i>Recepción de Vehículo</h2>
+    <a href="/taller" class="btn btn-light shadow-sm fw-bold rounded-pill px-4 border hover-shadow">
+        <i class="bi bi-arrow-left me-2"></i>Volver al Taller
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="sidebar-info-reception">
+            <div>
+                <div class="sidebar-icon-reception"><i class="bi bi-shield-check"></i></div>
+                <h3 class="fw-bold mb-2" style="letter-spacing: 0.5px;">Apertura de OT</h3>
+                <span class="badge bg-white text-success fw-bold rounded-pill px-3 py-2 mb-4 shadow-sm">Generación de Ticket</span>
+                
+                <p class="opacity-75 mb-4" style="font-size: 0.95rem; line-height: 1.6;">
+                    Al generar esta orden, el vehículo pasará a la lista de "Activos" en el taller. Asegúrese de transcribir exactamente los síntomas que reporta el cliente.
+                </p>
+
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-info-circle-fill text-light me-2 fs-5"></i>
+                    <span class="small fw-bold">El buscador inteligente soporta DNI, Placa o Nombre.</span>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-top border-light border-opacity-25">
+                <small class="opacity-75"><i class="bi bi-tools me-1"></i> Módulo de Taller - Virgen de Chapi</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <form method="POST" action="/taller/nueva" class="card card-enterprise h-100">
+            <div class="card-body p-4 p-md-5">
+                
+                <div class="section-header-reception">
+                    <i class="bi bi-car-front-fill text-success fs-4 me-2"></i> IDENTIFICACIÓN Y ASIGNACIÓN
+                </div>
+                
+                <div class="row g-4 mb-5">
+                    <div class="col-12">
+                        <label class="form-label" for="select_vehiculo">Seleccionar Vehículo / Propietario <span class="text-danger">*</span></label>
+                        <div class="input-group shadow-sm border rounded-3">
+                            <span class="input-group-text bg-white border-0"><i class="bi bi-search text-success"></i></span>
+                            <select class="form-select border-0" id="select_vehiculo" name="vehiculo_id" required>
+                                <option value=""></option>
+                                {% for v in vehiculos %}
+                                <option value="{{ v.id }}" 
+                                        data-placa="{{ v.placa }}" 
+                                        data-modelo="{{ v.marca }} {{ v.modelo }}" 
+                                        data-cliente="{{ v.cliente }}">
+                                    {{ v.placa }} / {{ v.cliente }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="usuario_id">Asignar Mecánico Inicial <span class="text-danger">*</span></label>
+                        <div class="input-group shadow-sm border rounded-3">
+                            <span class="input-group-text bg-white border-0"><i class="bi bi-person-workspace text-primary"></i></span>
+                            <select class="form-select border-0" id="usuario_id" name="usuario_id" required>
+                                <option value=""></option>
+                                {% for m in mecanicos %}
+                                <option value="{{ m.id }}">{{ m.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label" for="fecha_promesa">Fecha y Hora de Entrega</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text"><i class="bi bi-calendar-check text-danger"></i></span>
+                            <input type="text" class="form-control fw-bold" id="fecha_promesa" name="fecha_promesa" placeholder="Opcional: Fijar fecha límite...">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-header-reception">
+                    <i class="bi bi-chat-square-quote-fill text-success fs-4 me-2"></i> MOTIVO DE INGRESO
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-12">
+                        <label class="form-label">Detalle de falla según el cliente <span class="text-danger">*</span></label>
+                        <textarea class="form-control shadow-sm fw-bold text-dark" id="falla_reportada" name="falla_reportada" rows="5" placeholder="Ej: Ruido en la suspensión delantera al pasar por baches, el motor pierde fuerza en subidas..." required style="resize: none; background-color: #fcfcfc; font-size: 1rem;"></textarea>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="card-footer bg-light border-top py-4 px-4 px-md-5 d-flex justify-content-end">
+                <button type="submit" class="btn btn-success btn-lg fw-bold text-white shadow-sm px-5 rounded-3">
+                    <i class="bi bi-play-circle-fill me-2"></i>Generar Orden de Entrada
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }} 
+<script>
+    // Funciones para personalizar cómo se ven los items en el buscador de Select2
+    function formatarOpcion(opcion) {
+        if (!opcion.id) { return opcion.text; }
+        var placa = $(opcion.element).data('placa');
+        var modelo = $(opcion.element).data('modelo');
+        var cliente = $(opcion.element).data('cliente');
+        
+        if (!placa) { return opcion.text; }
+        
+        var $opcionHTML = $('<div><span class="badge bg-dark me-2" style="letter-spacing: 1px;">' + placa + '</span><strong style="font-size: 1.05rem; color: #198754;">' + modelo + '</strong></div><div style="font-size: 0.85rem; color: #6c757d;" class="ms-1 mt-1"><i class="bi bi-person-fill me-1"></i>' + cliente + '</div>');
+        return $opcionHTML;
+    };
+
+    function formatarSeleccion(opcion) {
+        if (!opcion.id) { return opcion.text; }
+        var placa = $(opcion.element).data('placa');
+        var modelo = $(opcion.element).data('modelo');
+        var $seleccionHTML = $('<div><span class="badge bg-success me-2" style="letter-spacing: 1px;">' + placa + '</span><strong>' + modelo + '</strong></div>');
+        return $seleccionHTML;
+    }
+
+    $(document).ready(function() {
+        // Inicializar Select2 (Buscador de Vehículo)
+        $('#select_vehiculo').select2({
+            theme: "bootstrap-5",
+            placeholder: "Buscar por Placa o Nombre del Cliente...",
+            templateResult: formatarOpcion,
+            templateSelection: formatarSeleccion,
+            escapeMarkup: function (markup) { return markup; }
+        });
+
+        // Inicializar Select2 (Mecánico)
+        $('#usuario_id').select2({
+            theme: "bootstrap-5",
+            placeholder: "Seleccione Responsable...",
+        });
+
+        // Configuración de Calendario y Hora (Flatpickr)
+        flatpickr("#fecha_promesa", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            locale: "es",
+            time_24hr: true,
+            minuteIncrement: 30,
+            plugins: [
+                new confirmDatePlugin({
+                    confirmText: "Fijar Fecha",
+                    showAlways: true,
+                    theme: "light"
+                })
+            ]
+        });
+    });
+</script>
+{% endblock %}

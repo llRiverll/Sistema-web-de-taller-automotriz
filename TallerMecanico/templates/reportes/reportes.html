@@ -1,0 +1,583 @@
+{% extends "base.html" %}
+{% block title %}Centro de Inteligencia - Virgen de Chapi{% endblock %}
+{% block active_reportes %}active{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    /* =====================================================================
+       DISEÑO HORIZON UI 2026 (VIVO, VIBRANTE Y ORDENADO)
+       ===================================================================== */
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+    
+    body { background-color: #F4F7FE; font-family: 'Plus Jakarta Sans', sans-serif; color: #2B3674; }
+    
+    .page-header { margin-bottom: 2rem; }
+    .title-main { font-weight: 800; color: #2B3674; font-size: 2.2rem; letter-spacing: -1px; }
+    
+    /* 1. TARJETAS KPI (Con Sombras Vibrantes) */
+    .kpi-card {
+        background: #ffffff; border-radius: 20px; padding: 1.8rem;
+        box-shadow: 0px 18px 40px rgba(112, 144, 176, 0.12); border: none;
+        display: flex; align-items: center; gap: 1.5rem; transition: transform 0.3s ease;
+    }
+    .kpi-card:hover { transform: translateY(-5px); }
+    
+    .kpi-icon-container {
+        width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0;
+    }
+    .icon-green { background: #E6F8F3; color: #05CD99; }
+    .icon-blue { background: #E9EDF7; color: #4318FF; }
+    .icon-red { background: #FDE8E8; color: #EE5D50; }
+
+    .kpi-title { font-size: 0.85rem; font-weight: 700; color: #A3AED0; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem; }
+    .kpi-value { font-size: 2rem; font-weight: 800; color: #2B3674; margin: 0; line-height: 1.1; }
+
+    /* 2. PESTAÑAS (Modern Pills) */
+    .custom-tabs-container { background: #ffffff; padding: 8px; border-radius: 20px; display: inline-flex; box-shadow: 0px 10px 20px rgba(112, 144, 176, 0.08); margin-bottom: 2rem; gap: 5px; flex-wrap: wrap; }
+    .nav-btn { background: transparent; border: none; color: #A3AED0; font-weight: 700; font-size: 0.95rem; padding: 10px 24px; border-radius: 14px; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+    .nav-btn:hover { color: #2B3674; background: #F4F7FE; }
+    .nav-btn.active { background: #4318FF; color: #ffffff; box-shadow: 0px 8px 16px rgba(67, 24, 255, 0.3); }
+
+    /* 3. PANELES (Rompiendo el blanco aburrido) */
+    .panel-white { background: #ffffff; border-radius: 20px; box-shadow: 0px 18px 40px rgba(112, 144, 176, 0.12); padding: 1.5rem; height: 100%; display: flex; flex-direction: column; }
+    .panel-dark { background: linear-gradient(135deg, #110B29 0%, #2B3674 100%); border-radius: 20px; box-shadow: 0px 18px 40px rgba(43, 54, 116, 0.3); padding: 1.8rem; height: 100%; color: white; position: relative; overflow: hidden; }
+    .panel-dark::before { content: ''; position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(67, 24, 255, 0.5); filter: blur(50px); border-radius: 50%; }
+
+    /* 4. TABLAS VIBRANTES Y ORDENADAS */
+    .table-header-custom { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1.5rem; border-bottom: 1px solid #E9EDF7; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    
+    table.dataTable { border-collapse: collapse !important; width: 100% !important; margin: 0 !important; border: none !important; }
+    table.dataTable thead th { background: #F4F7FE !important; color: #A3AED0 !important; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; padding: 1rem 1.2rem !important; border: none !important; font-weight: 800; }
+    table.dataTable thead th:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+    table.dataTable thead th:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+    
+    table.dataTable tbody td { padding: 1rem 1.2rem !important; vertical-align: middle; border-bottom: 1px solid #E9EDF7 !important; color: #2B3674; font-weight: 700; font-size: 0.95rem; }
+    table.dataTable tbody tr:hover td { background-color: #F8FAFC !important; }
+
+    /* Buscador y Paginación */
+    .dataTables_wrapper .dataTables_filter { float: none !important; text-align: left !important; margin-bottom: 0; }
+    .dataTables_wrapper .dataTables_filter input { border: 1px solid #E9EDF7; border-radius: 12px; padding: 10px 16px; outline: none; font-family: 'Plus Jakarta Sans'; font-weight: 600; color: #2B3674; background: #F4F7FE; transition: 0.3s; width: 280px; }
+    .dataTables_wrapper .dataTables_filter input:focus { border-color: #4318FF; background: #ffffff; box-shadow: 0px 4px 15px rgba(67, 24, 255, 0.1); }
+    
+    .dataTables_wrapper .dataTables_paginate { display: flex; justify-content: flex-end; padding-top: 1rem; gap: 5px; }
+    .dataTables_wrapper .dataTables_paginate .paginate_button { border-radius: 10px !important; border: none !important; font-weight: 700 !important; color: #A3AED0 !important; background: transparent !important; padding: 6px 14px !important; transition: 0.2s; }
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #F4F7FE !important; color: #4318FF !important; }
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #4318FF !important; color: #ffffff !important; box-shadow: 0px 4px 10px rgba(67, 24, 255, 0.3) !important; }
+
+    .dt-footer-row td { background: #F4F7FE !important; color: #2B3674 !important; font-weight: 800; border-top: 2px solid #4318FF !important; border-bottom: none !important; font-size: 1.1rem; }
+
+    /* 5. ETIQUETAS, AVATARES Y COLORES (SIN ERRORES JINJA EN VS CODE) */
+    .badge-vibrant { padding: 6px 14px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
+    .badge-v-green { background: #E6F8F3; color: #05CD99; }
+    .badge-v-red { background: #FDE8E8; color: #EE5D50; }
+    .badge-v-gray { background: #F4F7FE; color: #A3AED0; }
+    
+    .avatar-vibrant { width: 45px; height: 45px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: white; background: linear-gradient(135deg, #4318FF 0%, #868CFF 100%); box-shadow: 0px 4px 15px rgba(67, 24, 255, 0.3); flex-shrink: 0; }
+    .text-money { font-family: 'Plus Jakarta Sans', monospace; font-weight: 900; letter-spacing: -0.5px; }
+
+    /* Colores dinámicos para textos (Sustituye el inline style para Jinja) */
+    .text-v-green { color: #05CD99 !important; }
+    .text-v-warning { color: #f59e0b !important; }
+    .text-v-red { color: #EE5D50 !important; }
+
+    /* 6. EXPORTACIONES ETL (Con prefijos estándar para Linter de VS Code) */
+    .etl-card { border: 1px solid #E9EDF7; border-radius: 20px; padding: 2rem; background: #ffffff; transition: 0.3s; display: flex; flex-direction: column; align-items: center; text-align: center; text-decoration: none; cursor: pointer; height: 100%; }
+    .etl-card:hover { transform: translateY(-8px); border-color: #4318FF; box-shadow: 0px 18px 40px rgba(67, 24, 255, 0.15); }
+    
+    .etl-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+    
+    .grad-sales { 
+        background: linear-gradient(135deg, #4318FF, #05CD99); 
+        -webkit-background-clip: text; 
+        background-clip: text; 
+        -webkit-text-fill-color: transparent; 
+        color: transparent; 
+    }
+    .grad-inventory { 
+        background: linear-gradient(135deg, #3b82f6, #60a5fa); 
+        -webkit-background-clip: text; 
+        background-clip: text; 
+        -webkit-text-fill-color: transparent; 
+        color: transparent; 
+    }
+    .grad-hr { 
+        background: linear-gradient(135deg, #8b5cf6, #c084fc); 
+        -webkit-background-clip: text; 
+        background-clip: text; 
+        -webkit-text-fill-color: transparent; 
+        color: transparent; 
+    }
+</style>
+
+<div id="data-dona-values" class="d-none" data-fin="{{ dona_data[0] }}" data-pro="{{ dona_data[1] }}" data-pau="{{ dona_data[2] }}"></div>
+
+<div id="data-ventas-raw" class="d-none">
+    {% for v in ventas %}
+        {% if v.estado != "anulado" and v.fecha_pago %}
+            {{ v.fecha_pago.strftime('%Y-%m-%d') }}|{{ v.monto_total }}||
+        {% endif %}
+    {% endfor %}
+</div>
+
+<div id="data-mecanicos-raw" class="d-none">
+    {% for m in mecanicos %}
+        {{ m.mecanico }}|{{ m.ingresos_generados or 0 }}||
+    {% endfor %}
+</div>
+
+<div class="container-fluid py-4 animate__animated animate__fadeIn">
+
+    <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center px-3 py-1 rounded-pill mb-2 fw-bold text-uppercase" style="background: #E9EDF7; color: #4318FF; font-size: 0.75rem; letter-spacing: 1px;">
+                <span class="spinner-grow spinner-grow-sm me-2" role="status" style="width: 0.5rem; height: 0.5rem;"></span> Dashboard 2026 En Vivo
+            </div>
+            <h2 class="title-main m-0">Inteligencia de Negocios</h2>
+            <p class="text-muted fw-bold mt-1 mb-0 fs-6" style="color: #A3AED0 !important;">Métricas avanzadas y auditoría financiera.</p>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="kpi-card">
+                <div class="kpi-icon-container icon-green"><i class="bi bi-wallet2"></i></div>
+                <div>
+                    <h6 class="kpi-title">Ingresos Brutos</h6>
+                    <h2 class="kpi-value">S/ {{ "%.2f"|format(stats.ventas_mes) }}</h2>
+                    <span class="badge badge-v-green mt-2"><i class="bi bi-graph-up-arrow me-1"></i> Margen 45%</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="kpi-card">
+                <div class="kpi-icon-container icon-blue"><i class="bi bi-layers"></i></div>
+                <div>
+                    <h6 class="kpi-title">Volumen Operativo</h6>
+                    <h2 class="kpi-value">{{ stats.ordenes_mes }} <span class="fs-4" style="color: #A3AED0;">OTs</span></h2>
+                    <span class="badge badge-v-gray mt-2"><i class="bi bi-check-circle-fill me-1"></i> Mes Actual</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="kpi-card">
+                <div class="kpi-icon-container icon-red"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                <div>
+                    <h6 class="kpi-title">Riesgo Logístico</h6>
+                    <h2 class="kpi-value" style="color: #EE5D50;">{{ stats.stock_critico }} <span class="fs-4" style="color: #FDE8E8;">Ítems</span></h2>
+                    <span class="badge badge-v-red mt-2"><i class="bi bi-cart-x-fill me-1"></i> Reabastecer</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-100 text-center text-lg-start">
+        <div class="custom-tabs-container">
+            {% set tab_activa = request.args.get('tab', 'graficos') %}
+            <button class="nav-btn {% if not fecha_inicio and tab_activa == 'graficos' %}active{% endif %}" onclick="mostrarPestana('graficos', this)">
+                <i class="bi bi-bar-chart-fill"></i> Pulso Visual
+            </button>
+            <button class="nav-btn {% if fecha_inicio or tab_activa == 'ingresos' %}active{% endif %}" onclick="mostrarPestana('ingresos', this)">
+                <i class="bi bi-file-earmark-spreadsheet-fill"></i> Libro Mayor
+            </button>
+            <button class="nav-btn" onclick="mostrarPestana('rrhh', this)">
+                <i class="bi bi-person-bounding-box"></i> Especialistas
+            </button>
+            <button class="nav-btn" onclick="mostrarPestana('etl', this)">
+                <i class="bi bi-database-down"></i> Data ETL
+            </button>
+        </div>
+    </div>
+
+    <div id="seccion_graficos" class="{% if fecha_inicio or tab_activa == 'ingresos' %}d-none{% endif %} animate__animated animate__fadeIn">
+        <div class="row g-4 mb-4">
+            <div class="col-lg-8">
+                <div class="panel-white">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h5 class="fw-bolder text-dark m-0">Tendencia de Ingresos Diarios</h5>
+                            <p class="small fw-bold m-0" style="color: #A3AED0;">Curva suavizada del periodo actual.</p>
+                        </div>
+                        <span class="badge badge-v-gray">Últimos 30 días</span>
+                    </div>
+                    <div style="position: relative; flex-grow: 1; min-height: 280px; width: 100%;">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="panel-dark">
+                    <h5 class="fw-bolder mb-4 text-white position-relative" style="z-index: 2;"><i class="bi bi-stars text-warning me-2"></i>Resumen Automático IA</h5>
+                    
+                    <div class="d-flex flex-column gap-3 position-relative" style="z-index: 2;">
+                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid #05CD99;">
+                            <span class="d-block small text-white-50 fw-bold mb-1 text-uppercase">Mejor Rendimiento</span>
+                            <div class="fs-6 fw-bold" id="insight-mecanico">Procesando...</div>
+                        </div>
+                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid #4318FF;">
+                            <span class="d-block small text-white-50 fw-bold mb-1 text-uppercase">Transacciones</span>
+                            <div class="fs-6 fw-bold" id="insight-ventas">Procesando...</div>
+                        </div>
+                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid #EE5D50;">
+                            <span class="d-block small text-white-50 fw-bold mb-1 text-uppercase">Acción Requerida</span>
+                            <div class="fs-6 fw-bold text-white">{{ stats.stock_critico }} ítems requieren compra.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="panel-white">
+                    <h5 class="fw-bolder text-dark m-0 mb-4">Estado Logístico</h5>
+                    <div style="position: relative; flex-grow: 1; min-height: 250px;">
+                        <canvas id="doughnutChart" data-total="{{ stats.ordenes_mes }}"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="panel-white">
+                    <h5 class="fw-bolder text-dark m-0 mb-4">Capital Generado por Especialista</h5>
+                    <div style="position: relative; flex-grow: 1; min-height: 250px;">
+                        <canvas id="barMecanicosChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="seccion_ingresos" class="{% if not fecha_inicio and tab_activa != 'ingresos' %}d-none{% endif %} animate__animated animate__fadeIn">
+        
+        <div class="panel-white px-0 py-2">
+            
+            <div class="table-header-custom px-4">
+                <div>
+                    <h4 class="fw-bolder text-dark m-0"><i class="bi bi-wallet2 text-success me-2"></i>Libro Mayor de Ventas</h4>
+                    <p class="small fw-bold m-0 mt-1" style="color: #A3AED0;">Transacciones procesadas en caja. La suma total se calcula en tiempo real.</p>
+                </div>
+                
+                <form method="GET" action="{{ url_for('reportes_index') }}" class="d-flex align-items-center gap-2 p-1 rounded-3" style="background: #F4F7FE; border: 1px solid #E9EDF7;">
+                    <input type="hidden" name="tab" value="ingresos">
+                    <input type="date" name="fecha_inicio" class="form-control form-control-sm border-0 bg-transparent fw-bold shadow-none" style="color: #2B3674;" value="{{ fecha_inicio or '' }}" required>
+                    <span class="text-muted fw-black">-</span>
+                    <input type="date" name="fecha_fin" class="form-control form-control-sm border-0 bg-transparent fw-bold shadow-none" style="color: #2B3674;" value="{{ fecha_fin or '' }}" required>
+                    <button type="submit" class="btn btn-sm text-white fw-bold px-3 rounded-2" style="background: #2B3674;">Filtrar</button>
+                    {% if fecha_inicio %}
+                    <a href="{{ url_for('reportes_index', tab='ingresos') }}" class="btn btn-sm btn-light text-danger px-2 border" title="Limpiar"><i class="bi bi-x-lg"></i></a>
+                    {% endif %}
+                </form>
+            </div>
+
+            <div class="table-responsive px-4 pb-2">
+                <table id="tablaIngresos" class="table w-100">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Documento</th>
+                            <th>Cliente / Razón Social</th>
+                            <th class="text-center">Método</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-end">Importe Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in ventas %}
+                        <tr class="{% if v.estado == 'anulado' %}opacity-50{% endif %}">
+                            <td>
+                                <span class="d-none">{{ v.fecha_pago.strftime('%Y%m%d%H%M') if v.fecha_pago else 0 }}</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-calendar-check text-primary"></i>
+                                    <div>
+                                        <div class="fw-bold">{{ v.fecha_pago.strftime('%d %b %Y') }}</div>
+                                        <div class="small" style="color: #A3AED0;">{{ v.fecha_pago.strftime('%I:%M %p') }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-v-gray text-dark fs-6">{{ v.comprobante }}</span></td>
+                            <td>
+                                <div class="fw-bold">{{ v.cliente }}</div>
+                                <div class="small fw-bold" style="color: #A3AED0;">DOC: {{ v.numero_documento }}</div>
+                            </td>
+                            <td class="text-center"><span class="badge border border-secondary text-secondary px-3 py-1 rounded-pill">{{ v.metodo_pago | upper }}</span></td>
+                            <td class="text-center">
+                                {% if v.estado == 'anulado' %}
+                                    <span class="badge-vibrant badge-v-red">ANULADO</span>
+                                {% else %}
+                                    <span class="badge-vibrant badge-v-green">VÁLIDO</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end text-money fs-5 {% if v.estado == 'anulado' %}text-danger{% else %}text-success{% endif %}">
+                                {{ "%.2f"|format(v.monto_total) }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="dt-footer-row">
+                            <td colspan="5" class="text-end text-uppercase" style="border-bottom-left-radius: 12px;">Suma en Pantalla:</td>
+                            <td class="text-end text-success fs-3 text-money" id="suma_pagina" style="border-bottom-right-radius: 12px;">S/ 0.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="seccion_rrhh" class="d-none animate__animated animate__fadeIn">
+        <div class="panel-white px-0 py-2">
+            <div class="table-header-custom px-4">
+                <h4 class="fw-bolder text-dark m-0"><i class="bi bi-people-fill text-primary me-2"></i>Métricas de Especialistas</h4>
+            </div>
+
+            <div class="table-responsive px-4 pb-2">
+                <table id="tablaRRHH" class="table w-100">
+                    <thead>
+                        <tr>
+                            <th>Especialista</th>
+                            <th class="text-center">Asignadas</th>
+                            <th class="text-center">Completadas</th>
+                            <th style="width: 250px;">Efectividad (KPI)</th>
+                            <th class="text-end">Capital Generado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in mecanicos %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-vibrant"><i class="bi bi-person-fill"></i></div>
+                                    <div class="fw-bolder fs-6">{{ m.mecanico }}</div>
+                                </div>
+                            </td>
+                            <td class="text-center fw-bold fs-5" style="color: #A3AED0;">{{ m.total_asignadas }}</td>
+                            <td class="text-center fw-black fs-4 text-primary">{{ m.ordenes_completadas }}</td>
+                            <td>
+                                {% set porcentaje = (m.ordenes_completadas / m.total_asignadas * 100) if m.total_asignadas > 0 else 0 %}
+                                {% set color_class = "text-v-green" if porcentaje >= 80 else ("text-v-warning" if porcentaje >= 50 else "text-v-red") %}
+                                {% set bg_color_hex = "#05CD99" if porcentaje >= 80 else ("#f59e0b" if porcentaje >= 50 else "#EE5D50") %}
+                                
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="progress w-100" style="height: 10px; border-radius: 10px; background-color: #E9EDF7;">
+                                        <div class="progress-bar js-bar" data-width="{{ porcentaje }}" data-color="{{ bg_color_hex }}" style="border-radius: 10px;"></div>
+                                    </div>
+                                    <span class="fw-black fs-5 {{ color_class }}">{{ "%.0f"|format(porcentaje) }}%</span>
+                                </div>
+                            </td>
+                            <td class="text-end fw-black fs-4 text-dark text-money">
+                                S/ {{ "%.2f"|format(m.ingresos_generados or 0) }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="seccion_etl" class="d-none animate__animated animate__fadeIn">
+        <div class="row g-4 mt-1">
+            
+            <div class="col-md-4">
+                <form action="{{ url_for('exportar_ventas') }}" method="GET" class="h-100">
+                    <input type="hidden" name="fecha_inicio" value="{{ fecha_inicio or '' }}">
+                    <input type="hidden" name="fecha_fin" value="{{ fecha_fin or '' }}">
+                    <button type="submit" class="etl-card w-100">
+                        <div class="etl-icon grad-sales"><i class="bi bi-file-earmark-excel-fill"></i></div>
+                        <h4 class="fw-bolder text-dark mb-2">Libro de Ventas</h4>
+                        <p class="text-muted small fw-bold mb-4">Matriz contable cruzada con órdenes. Descarga lista para el contador.</p>
+                        <span class="badge badge-v-green fs-6 px-4 py-2 w-100"><i class="bi bi-download me-1"></i> Exportar XLSX</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="col-md-4">
+                <a href="{{ url_for('exportar_inventario') }}" class="etl-card">
+                    <div class="etl-icon grad-inventory"><i class="bi bi-boxes"></i></div>
+                    <h4 class="fw-bolder text-dark mb-2">Auditoría Almacén</h4>
+                    <p class="text-muted small fw-bold mb-4">Catálogo completo con Costo Promedio (CPP) y alertas de semáforo.</p>
+                    <span class="badge px-4 py-2 fs-6 w-100 fw-bold text-uppercase" style="background: #EFF6FF; color: #3B82F6;"><i class="bi bi-download me-1"></i> Exportar XLSX</span>
+                </a>
+            </div>
+
+            <div class="col-md-4">
+                <a href="{{ url_for('exportar_mecanicos') }}" class="etl-card">
+                    <div class="etl-icon grad-hr"><i class="bi bi-people-fill"></i></div>
+                    <h4 class="fw-bolder text-dark mb-2">Liquidación RR.HH.</h4>
+                    <p class="text-muted small fw-bold mb-4">Producción individual de empleados para el cálculo de bonificaciones.</p>
+                    <span class="badge px-4 py-2 fs-6 w-100 fw-bold text-uppercase" style="background: #F5F3FF; color: #8B5CF6;"><i class="bi bi-download me-1"></i> Exportar XLSX</span>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 1. TABS NAVIGATION
+    function mostrarPestana(id, btn) {
+        document.querySelectorAll('.custom-tabs-container .nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        ['graficos', 'ingresos', 'rrhh', 'etl'].forEach(sec => {
+            document.getElementById('seccion_' + sec).classList.add('d-none');
+        });
+        document.getElementById('seccion_' + id).classList.remove('d-none');
+    }
+
+    // 2. APLICAR ANCHOS A BARRAS DE PROGRESO (Cero Jinja en Styles inline)
+    document.querySelectorAll('.js-bar').forEach(bar => {
+        bar.style.width = bar.getAttribute('data-width') + '%';
+        bar.style.backgroundColor = bar.getAttribute('data-color');
+    });
+
+    // 3. DATATABLES CONFIGURACIÓN LIMPIA
+    $(document).ready(function() {
+        const dtLang = {
+            url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
+            search: "", searchPlaceholder: "🔍 Buscar en la tabla...",
+            lengthMenu: "Mostrar _MENU_"
+        };
+
+        $('#tablaIngresos').DataTable({
+            language: dtLang, pageLength: 15, lengthChange: false, order: [[0, "desc"]],
+            dom: '<"d-flex justify-content-end mb-3 px-4"f>rt<"d-flex justify-content-between align-items-center mt-3 px-4"ip>',
+            footerCallback: function (row, data, start, end, display) {
+                var api = this.api();
+                var floatVal = function (i) { return typeof i === 'string' ? i.replace(/[\S\/,]/g, '') * 1 : typeof i === 'number' ? i : 0; };
+                
+                var pageTotal = api.column(5, { page: 'current' }).data().reduce(function (a, b) {
+                    let htmlFila = api.row($(b).closest('tr')).node().innerHTML;
+                    if (htmlFila.includes('ANULADO')) return floatVal(a); 
+                    
+                    let match = b.match(/([0-9.]+)/);
+                    let valor = match ? match[1] : 0;
+                    return floatVal(a) + floatVal(valor);
+                }, 0);
+                
+                document.getElementById('suma_pagina').innerHTML = 'S/ ' + pageTotal.toFixed(2);
+            }
+        });
+
+        $('#tablaRRHH').DataTable({
+            language: dtLang, pageLength: 10, lengthChange: false, order: [[4, "desc"]],
+            dom: '<"d-flex justify-content-end mb-3 px-4"f>rt<"d-flex justify-content-between align-items-center mt-3 px-4"ip>'
+        });
+    });
+
+    // 4. GRÁFICOS Y PARSEO SEGURO
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // Extraer Ventas
+        const rawVentas = document.getElementById('data-ventas-raw').innerText.trim();
+        const ventasData = rawVentas.split('||').filter(x => x.trim() !== '').map(item => {
+            let partes = item.split('|');
+            return { fecha: partes[0].trim(), monto: parseFloat(partes[1]) };
+        });
+
+        // Extraer Mecánicos
+        const rawMecanicos = document.getElementById('data-mecanicos-raw').innerText.trim();
+        const mecanicosData = rawMecanicos.split('||').filter(x => x.trim() !== '').map(item => {
+            let partes = item.split('|');
+            return { mecanico: partes[0].trim(), ingresos: parseFloat(partes[1]) };
+        });
+
+        // Extraer Dona
+        const divDona = document.getElementById('data-dona-values');
+        const datosDona = [
+            parseInt(divDona.getAttribute('data-fin')),
+            parseInt(divDona.getAttribute('data-pro')),
+            parseInt(divDona.getAttribute('data-pau'))
+        ];
+
+        // ACTUALIZAR INSIGHTS IA
+        if(mecanicosData.length > 0) {
+            let topM = [...mecanicosData].sort((a,b) => b.ingresos - a.ingresos)[0];
+            document.getElementById('insight-mecanico').innerHTML = `<span class="text-white">${topM.mecanico}</span> lidera (S/ ${topM.ingresos.toFixed(2)}).`;
+        }
+        document.getElementById('insight-ventas').innerHTML = `<span class="text-white">${ventasData.length} transacciones</span> válidas.`;
+
+        // CHART 1: TENDENCIA
+        let ventasPorDia = {};
+        ventasData.forEach(v => {
+            if(!ventasPorDia[v.fecha]) ventasPorDia[v.fecha] = 0;
+            ventasPorDia[v.fecha] += v.monto;
+        });
+        
+        let fechasTrend = Object.keys(ventasPorDia).sort();
+        let montosTrend = fechasTrend.map(f => ventasPorDia[f]);
+
+        if(fechasTrend.length < 2) {
+            fechasTrend = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+            montosTrend = [100, 200, 150, 400, 250, 500]; 
+        }
+
+        const ctxTrend = document.getElementById('trendChart').getContext('2d');
+        let gradientTrend = ctxTrend.createLinearGradient(0, 0, 0, 300);
+        gradientTrend.addColorStop(0, 'rgba(67, 24, 255, 0.3)'); 
+        gradientTrend.addColorStop(1, 'rgba(67, 24, 255, 0.0)');
+
+        new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: fechasTrend,
+                datasets: [{
+                    data: montosTrend,
+                    borderColor: '#4318FF', borderWidth: 3,
+                    backgroundColor: gradientTrend, fill: true, tension: 0.4, 
+                    pointBackgroundColor: '#ffffff', pointBorderColor: '#4318FF', pointBorderWidth: 2, pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                scales: { 
+                    x: { grid: { display: false }, ticks: { font: {family: 'Plus Jakarta Sans', weight: '700'}, color: '#A3AED0' } }, 
+                    y: { grid: { borderDash: [4, 4], color: '#E9EDF7' }, border: {display: false}, ticks: { font: {family: 'Plus Jakarta Sans', weight: '700'}, color: '#A3AED0' } } 
+                }
+            }
+        });
+
+        // CHART 2: DONA CON TEXTO
+        const centerTextPlugin = {
+            id: 'centerText',
+            beforeDraw: function(chart) {
+                if (chart.config.type !== 'doughnut') return;
+                var ctx = chart.ctx; var chartArea = chart.chartArea;
+                var centerX = (chartArea.left + chartArea.right) / 2; var centerY = (chartArea.top + chartArea.bottom) / 2;
+                ctx.restore();
+                var text = chart.canvas.dataset.total; var fontSize = (chart.height / 100).toFixed(2);
+                ctx.font = "800 " + fontSize + "em 'Plus Jakarta Sans', sans-serif"; ctx.textBaseline = "middle"; ctx.fillStyle = "#2B3674";
+                ctx.fillText(text, centerX - (ctx.measureText(text).width / 2), centerY - 10);
+            }
+        };
+        Chart.register(centerTextPlugin);
+
+        new Chart(document.getElementById('doughnutChart'), {
+            type: 'doughnut',
+            data: { labels: ['Finalizados', 'En Proceso', 'Falta Repuesto'], datasets: [{ data: datosDona, backgroundColor: ['#05CD99', '#4318FF', '#EE5D50'], borderWidth: 0, hoverOffset: 5, borderRadius: 5 }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: {family: 'Plus Jakarta Sans', weight: '700', size: 12}, color: '#A3AED0' } } } }
+        });
+
+        // CHART 3: BARRAS MECÁNICOS
+        let nombresM = [], ingresosM = [];
+        mecanicosData.forEach(m => {
+            if (m.ingresos > 0) { nombresM.push(m.mecanico.split(' ').slice(0,2).join(' ')); ingresosM.push(m.ingresos); }
+        });
+
+        new Chart(document.getElementById('barMecanicosChart').getContext('2d'), {
+            type: 'bar',
+            data: { labels: nombresM, datasets: [{ data: ingresosM, backgroundColor: '#4318FF', borderRadius: 8, barPercentage: 0.5 }] },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { borderDash: [4, 4], color: '#E9EDF7' } }, y: { grid: { display: false }, ticks: { font: { weight: '800', family: 'Plus Jakarta Sans' }, color: '#2B3674' } } } }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% block title %}Ajustes del Sistema - Virgen de Chapi{% endblock %}
+{% block active_configuracion %}active{% endblock %}
+
+{% block content %}
+<style>
+    body { background-color: #f8fafc; }
+    .card-custom { border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); background: #ffffff; }
+    
+    .section-title { font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-bottom: 1.5rem; display: flex; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; }
+    .section-title i { background: #eff6ff; color: #3b82f6; padding: 10px; border-radius: 10px; margin-right: 12px; font-size: 1.2rem; }
+    
+    .input-modern { border-radius: 10px; border: 1px solid #cbd5e1; padding: 0.7rem 1rem; font-weight: 600; color: #1e293b; background-color: #f8fafc; transition: all 0.2s; }
+    .input-modern:focus { border-color: #3b82f6; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); outline: none; }
+    .form-label-custom { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; display: block; }
+
+    /* Estilos del Menú Vertical (Pestañas) */
+    .v-pills-custom .nav-link { color: #64748b; font-weight: 700; text-align: left; padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 0.5rem; transition: all 0.2s; border: 1px solid transparent; }
+    .v-pills-custom .nav-link:hover { background-color: #f1f5f9; color: #0f172a; }
+    .v-pills-custom .nav-link.active { background-color: #eff6ff; color: #2563eb; border-color: #bfdbfe; font-weight: 800; }
+    .v-pills-custom .nav-link i { margin-right: 10px; font-size: 1.2rem; }
+
+    /* Switch Custom (Seguridad) */
+    .form-switch .form-check-input { width: 3em; height: 1.5em; cursor: pointer; }
+    .form-switch .form-check-input:checked { background-color: #10b981; border-color: #10b981; }
+
+    .upload-area { border: 2px dashed #cbd5e1; border-radius: 16px; padding: 2rem; text-align: center; background: #f8fafc; cursor: pointer; transition: 0.3s; position: relative; overflow: hidden; }
+    .upload-area:hover { border-color: #3b82f6; background: #eff6ff; }
+    .upload-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; }
+
+    /* Ticket Flotante */
+    .ticket-preview { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2rem; font-family: 'Courier New', Courier, monospace; color: #0f172a; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+</style>
+
+<div class="container-fluid py-4 animate__animated animate__fadeIn">
+    
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="fw-black text-dark m-0" style="letter-spacing: -0.5px;"><i class="bi bi-sliders text-primary me-2"></i>Ajustes del Sistema</h2>
+            <p class="text-muted fw-bold small mt-1 mb-0">Centro de control maestro (Facturación, Correos, Accesos y Empresa).</p>
+        </div>
+        <button type="submit" form="formConfig" class="btn btn-primary px-5 py-3 rounded-pill fw-bold shadow hover-lift" style="font-size: 1rem; background-color: #3b82f6; border: none;">
+            <i class="bi bi-save2-fill me-2"></i>Guardar Todos los Ajustes
+        </button>
+    </div>
+
+    <div class="row g-4">
+        <!-- MENÚ LATERAL (PESTAÑAS) -->
+        <div class="col-md-3">
+            <div class="nav flex-column nav-pills v-pills-custom sticky-top" style="top: 20px;" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                <button class="nav-link active" id="v-pills-empresa-tab" data-bs-toggle="pill" data-bs-target="#v-pills-empresa" type="button" role="tab"><i class="bi bi-building"></i> Empresa y Finanzas</button>
+                <button class="nav-link" id="v-pills-facturacion-tab" data-bs-toggle="pill" data-bs-target="#v-pills-facturacion" type="button" role="tab"><i class="bi bi-receipt"></i> Facturación (PSE)</button>
+                <button class="nav-link" id="v-pills-correo-tab" data-bs-toggle="pill" data-bs-target="#v-pills-correo" type="button" role="tab"><i class="bi bi-envelope-at"></i> Servidor SMTP</button>
+                <button class="nav-link" id="v-pills-seguridad-tab" data-bs-toggle="pill" data-bs-target="#v-pills-seguridad" type="button" role="tab"><i class="bi bi-shield-lock"></i> Seguridad y Permisos</button>
+            </div>
+        </div>
+
+        <!-- CONTENIDO DE LAS PESTAÑAS -->
+        <div class="col-md-9">
+            <form action="/configuracion" method="POST" id="formConfig" enctype="multipart/form-data">
+                <div class="tab-content" id="v-pills-tabContent">
+                    
+                    <!-- 1. PESTAÑA EMPRESA Y FINANZAS -->
+                    <div class="tab-pane fade show active" id="v-pills-empresa" role="tabpanel">
+                        <div class="row g-4">
+                            <div class="col-lg-7">
+                                <div class="card-custom p-4 mb-4">
+                                    <div class="section-title"><i class="bi bi-image"></i> Identidad Visual</div>
+                                    <div class="d-flex align-items-center gap-4">
+                                        <img id="logoActual" src="{{ url_for('static', filename='logo_chapi.png') }}" class="rounded-3 border p-2 bg-white" style="width: 100px; height: 100px; object-fit: contain;">
+                                        <div class="upload-area flex-grow-1 p-3">
+                                            <input type="file" name="logo_empresa" id="inLogo" class="upload-input" accept="image/png, image/jpeg">
+                                            <i class="bi bi-cloud-arrow-up-fill fs-3 text-primary"></i>
+                                            <div class="fw-bold text-dark mt-1">Cambiar Logotipo</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card-custom p-4 mb-4">
+                                    <div class="section-title"><i class="bi bi-building-check"></i> Datos Comerciales</div>
+                                    <div class="row g-3">
+                                        <div class="col-md-8">
+                                            <label class="form-label-custom">Razón Social <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control input-modern" name="nombre_taller" id="inNombre" value="{{ config.nombre_taller }}" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label-custom">RUC <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control input-modern font-monospace" name="ruc" id="inRuc" value="{{ config.ruc }}" maxlength="11" required>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label-custom">Dirección Fiscal <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control input-modern" name="direccion" id="inDir" value="{{ config.direccion }}" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label-custom">Teléfono (Ticket)</label>
+                                            <input type="text" class="form-control input-modern" name="telefono" id="inTel" value="{{ config.telefono or '' }}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label-custom">Correo (Ticket)</label>
+                                            <input type="email" class="form-control input-modern text-lowercase" name="correo" id="inCorreo" value="{{ config.correo or '' }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card-custom p-4">
+                                    <div class="section-title"><i class="bi bi-bank"></i> Cuentas Bancarias (Impresas en ticket)</div>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label-custom text-primary"><i class="bi bi-credit-card-fill me-1"></i> Cuenta BCP</label>
+                                            <input type="text" class="form-control input-modern font-monospace" name="cuenta_banco" id="inBanco" value="{{ config.cuenta_banco or '' }}" placeholder="Ej: 440-91611954-0-49">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label-custom text-success"><i class="bi bi-phone-vibrate-fill me-1"></i> Número Yape/Plin</label>
+                                            <input type="text" class="form-control input-modern font-monospace" name="cuenta_yape" id="inYape" value="{{ config.cuenta_yape or '' }}" placeholder="Ej: 966 633 037">
+                                        </div>
+                                        <div class="col-12 mt-3">
+                                            <label class="form-label-custom">Mensaje de Agradecimiento</label>
+                                            <input type="text" class="form-control input-modern" name="mensaje_ticket" id="inMsj" value="{{ config.mensaje_ticket }}" placeholder="¡GRACIAS POR SU PREFERENCIA!">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PREVISUALIZADOR DEL TICKET -->
+                            <div class="col-lg-5">
+                                <div class="ticket-preview position-sticky" style="top: 20px;">
+                                    <div class="text-center border-bottom pb-3 mb-3">
+                                        <img id="outLogo" src="{{ url_for('static', filename='logo_chapi.png') }}" style="max-height: 60px; margin-bottom: 10px;" onerror="this.style.display='none';">
+                                        <h5 class="fw-bolder text-uppercase mb-1" id="outNombre">{{ config.nombre_taller }}</h5>
+                                        <div class="fw-bold small">RUC: <span id="outRuc">{{ config.ruc }}</span></div>
+                                        <div class="small text-muted text-uppercase mt-1">{{ config.direccion }}</div>
+                                    </div>
+                                    <div class="text-center small text-muted border-bottom pb-3 mb-3">
+                                        <div class="mb-1"><i class="bi bi-telephone-fill me-1"></i> <span id="outTel">{{ config.telefono or '---' }}</span></div>
+                                        <div><i class="bi bi-envelope-fill me-1"></i> <span id="outCorreo">{{ config.correo or '---' }}</span></div>
+                                    </div>
+                                    <div class="text-center small">
+                                        <div class="fw-bold mb-1">Cuentas para Transferencias:</div>
+                                        <div class="text-muted">BCP: <span id="outBanco">{{ config.cuenta_banco or 'No registrado' }}</span></div>
+                                        <div class="text-muted">Yape: <span id="outYape">{{ config.cuenta_yape or 'No registrado' }}</span></div>
+                                        <div class="mt-3 fw-bold text-dark text-uppercase" id="outMsj">{{ config.mensaje_ticket }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. PESTAÑA FACTURACIÓN PSE -->
+                    <div class="tab-pane fade" id="v-pills-facturacion" role="tabpanel">
+                        <div class="card-custom p-4 p-md-5 mb-4">
+                            <div class="section-title"><i class="bi bi-hash"></i> Series e Impuestos</div>
+                            <div class="row g-4">
+                                <div class="col-md-4">
+                                    <label class="form-label-custom">Serie Boletas</label>
+                                    <input type="text" class="form-control input-modern font-monospace text-uppercase" name="serie_boleta" value="{{ config.serie_boleta }}" maxlength="4" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label-custom">Serie Facturas</label>
+                                    <input type="text" class="form-control input-modern font-monospace text-uppercase" name="serie_factura" value="{{ config.serie_factura }}" maxlength="4" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label-custom text-primary">Tasa I.G.V. (%)</label>
+                                    <input type="number" step="0.01" class="form-control input-modern text-primary fw-black bg-primary bg-opacity-10" name="porcentaje_igv" value="{{ config.porcentaje_igv }}" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label-custom">Moneda Principal</label>
+                                    <select class="form-select input-modern fw-bold" name="moneda">
+                                        <option value="S/" {% if config.moneda == 'S/' %}selected{% endif %}>Soles (S/)</option>
+                                        <option value="$" {% if config.moneda == '$' %}selected{% endif %}>Dólares ($)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-custom p-4 p-md-5">
+                            <div class="section-title text-success"><i class="bi bi-cloud-check text-success bg-success bg-opacity-10"></i> Conexión API (SUNAT / PSE)</div>
+                            <p class="text-muted small mb-4">Estas credenciales comunican tu sistema de caja directamente con la SUNAT a través del Proveedor de Servicios Electrónicos.</p>
+                            <div class="row g-4">
+                                <div class="col-12">
+                                    <label class="form-label-custom">Ruta API (URL del facturador)</label>
+                                    <input type="url" class="form-control input-modern" name="pse_url" value="{{ config.pse_url or '' }}" placeholder="Ej: https://api.nubefact.com/api/v1/fe/generar">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label-custom">Token de Autorización (Bearer)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-key-fill text-muted"></i></span>
+                                        <input type="password" class="form-control input-modern border-start-0 font-monospace" name="pse_token" value="{{ config.pse_token or '' }}" placeholder="Pega tu token aquí...">
+                                    </div>
+                                    <div class="form-text text-danger mt-1 fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Mantén este token en secreto.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. PESTAÑA CORREOS SMTP -->
+                    <div class="tab-pane fade" id="v-pills-correo" role="tabpanel">
+                        <div class="card-custom p-4 p-md-5">
+                            <div class="section-title text-danger"><i class="bi bi-envelope-check-fill text-danger bg-danger bg-opacity-10"></i> Configuración de Correos Salientes</div>
+                            <p class="text-muted small mb-4">Esta cuenta de correo se usará para enviar alertas, códigos 2FA y avisos a los clientes ("Su vehículo está listo"). Se recomienda usar Gmail con una "Contraseña de Aplicación".</p>
+                            
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label-custom">Correo Electrónico (Remitente)</label>
+                                    <input type="email" class="form-control input-modern" name="smtp_email" value="{{ config.smtp_email or '' }}" placeholder="taller@gmail.com">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label-custom">Contraseña de Aplicación</label>
+                                    <input type="password" class="form-control input-modern font-monospace" name="smtp_password" value="{{ config.smtp_password or '' }}" placeholder="xxxx xxxx xxxx xxxx">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. PESTAÑA SEGURIDAD Y PERMISOS -->
+                    <div class="tab-pane fade" id="v-pills-seguridad" role="tabpanel">
+                        <div class="card-custom p-4 p-md-5">
+                            <div class="section-title text-indigo"><i class="bi bi-shield-fill-check text-white" style="background: #4f46e5;"></i> Políticas del Sistema</div>
+                            <p class="text-muted small mb-4">Activa o desactiva las reglas de negocio de acuerdo a cómo opera tu taller.</p>
+
+                            <ul class="list-group list-group-flush border-0">
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-3 px-0 border-bottom border-light">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1">Permitir Ventas a Crédito</h6>
+                                        <small class="text-muted">Si se desactiva, los cajeros solo podrán cobrar en efectivo o tarjeta.</small>
+                                    </div>
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" name="permitir_credito" {% if config.permitir_credito %}checked{% endif %}>
+                                    </div>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-3 px-0 border-bottom border-light">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1">Cajeros pueden anular comprobantes</h6>
+                                        <small class="text-muted">Actualmente solo el Administrador tiene permiso para extornar ventas.</small>
+                                    </div>
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" name="cajeros_pueden_anular" {% if config.cajeros_pueden_anular %}checked{% endif %}>
+                                    </div>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-3 px-0 border-bottom border-light">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1">Obligar Autenticación 2FA</h6>
+                                        <small class="text-muted">Envía un código de 6 dígitos al correo del usuario al iniciar sesión.</small>
+                                    </div>
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" name="obligar_2fa" {% if config.obligar_2fa %}checked{% endif %}>
+                                    </div>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-3 px-0">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1">Envío automático de correos a clientes</h6>
+                                        <small class="text-muted">El sistema avisará al cliente cuando el mecánico termine el trabajo.</small>
+                                    </div>
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" name="envio_correos_auto" {% if config.envio_correos_auto %}checked{% endif %}>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Función de sincronización para el Ticket Flotante
+        function syncInput(inputId, outputId, transform = 'none') {
+            const input = document.getElementById(inputId);
+            const output = document.getElementById(outputId);
+            if(input && output) {
+                input.addEventListener('input', function() {
+                    let val = this.value ? this.value : '---';
+                    if(transform === 'upper') val = val.toUpperCase();
+                    output.innerText = val;
+                });
+            }
+        }
+
+        syncInput('inNombre', 'outNombre', 'upper');
+        syncInput('inRuc', 'outRuc');
+        syncInput('inTel', 'outTel');
+        syncInput('inCorreo', 'outCorreo');
+        syncInput('inMsj', 'outMsj', 'upper');
+        syncInput('inBanco', 'outBanco');
+        syncInput('inYape', 'outYape');
+
+        // Lógica de carga de Logo
+        const fileInput = document.getElementById('inLogo');
+        const logoActual = document.getElementById('logoActual');
+        const outLogo = document.getElementById('outLogo');
+
+        if(fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        logoActual.src = event.target.result;
+                        outLogo.src = event.target.result;
+                        outLogo.style.display = 'inline-block';
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

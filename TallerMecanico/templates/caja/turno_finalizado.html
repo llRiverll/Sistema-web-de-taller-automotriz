@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Resumen de Turno - Virgen de Chapi{% endblock %}
+{% block active_caja %}active{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 d-flex justify-content-center align-items-center" style="min-height: 80vh; animation: fadeIn 0.5s ease;">
+    
+    <div class="card border-0 shadow-lg w-100" style="max-width: 1100px; border-radius: 24px; overflow: hidden;">
+        <div class="row g-0">
+            
+            <div class="col-md-5 p-5 text-white d-flex flex-column justify-content-center text-center {% if caja.descuadre < 0 %}panel-rojo{% else %}panel-verde{% endif %}">
+                
+                <div class="mb-4">
+                    {% if caja.descuadre < 0 %}
+                        <div class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-20 rounded-circle mb-3" style="width: 100px; height: 100px; animation: pulseRed 2s infinite;">
+                            <i class="bi bi-exclamation-octagon-fill text-white" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h2 class="fw-bolder text-uppercase">Faltante Detectado</h2>
+                        <p class="text-white-50 px-4">El turno no puede ser archivado hasta que el administrador valide el descuadre de efectivo.</p>
+                    {% else %}
+                        <div class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-20 rounded-circle mb-3" style="width: 100px; height: 100px;">
+                            <i class="bi bi-check-all text-white" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h2 class="fw-bolder text-uppercase">Turno Exitoso</h2>
+                        <p class="text-white-50 px-4">La caja ha sido cuadrada y cerrada correctamente sin observaciones pendientes.</p>
+                    {% endif %}
+                </div>
+
+                <div class="mt-4 gap-2 d-grid">
+                    <a href="/dashboard" class="btn btn-white btn-lg fw-bold rounded-pill shadow-sm {% if caja.descuadre < 0 %}btn-texto-rojo{% else %}btn-texto-verde{% endif %}" style="background: white; border: none;">
+                        <i class="bi bi-house-door-fill me-2"></i>Ir al Panel Principal
+                    </a>
+                    
+                    {% if session.user_rol == 'admin' and caja.descuadre < 0 %}
+                    <button type="button" class="btn btn-outline-light btn-lg fw-bold rounded-pill border-2 mt-2" data-bs-toggle="modal" data-bs-target="#modalResolver">
+                        <i class="bi bi-shield-lock-fill me-2"></i>Validar como Administrador
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-md-7 p-5 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3">
+                    <div>
+                        <h4 class="fw-bolder text-dark mb-0">Reporte de Auditoría</h4>
+                        <small class="text-muted">ID Sesión: #{{ caja.id }} | {{ caja.nombre_usuario }}</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge {% if caja.descuadre < 0 %}bg-danger{% else %}bg-success{% endif %} rounded-pill px-3 py-2">
+                            ESTADO: {{ caja.estado|upper }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-6">
+                        <small class="text-muted text-uppercase fw-bold d-block" style="font-size: 0.7rem;">Iniciado el:</small>
+                        <span class="text-dark fw-bold">{{ caja.fecha_apertura.strftime('%d/%m/%Y %H:%M') }}</span>
+                    </div>
+                    <div class="col-6 text-end">
+                        <small class="text-muted text-uppercase fw-bold d-block" style="font-size: 0.7rem;">Finalizado el:</small>
+                        <span class="text-dark fw-bold">{{ caja.fecha_cierre.strftime('%d/%m/%Y %H:%M') }}</span>
+                    </div>
+
+                    <div class="col-12 mt-5">
+                        <div class="p-4 rounded-4 bg-light">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Fondo Inicial (Sencillo):</span>
+                                <span class="fw-bold text-dark">S/ {{ "%.2f"|format(caja.monto_inicial|float) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Ingresos Digitales (Info):</span>
+                                <span class="fw-bold text-info">S/ {{ "%.2f"|format(caja.total_digital|float) }}</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Efectivo Esperado (SISTEMA):</span>
+                                <span class="fw-bold text-dark fs-5">S/ {{ "%.2f"|format(caja.monto_calculado|float) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span class="text-muted">Efectivo Declarado (CAJERO):</span>
+                                <span class="fw-bold text-dark fs-5">S/ {{ "%.2f"|format(caja.monto_fisico|float) }}</span>
+                            </div>
+
+                            <div class="p-3 rounded-3 mt-2 {% if caja.descuadre < 0 %}bg-danger bg-opacity-10 text-danger{% else %}bg-success bg-opacity-10 text-success{% endif %} d-flex justify-content-between align-items-center">
+                                <span class="fw-bolder">RESULTADO DEL BALANCE:</span>
+                                <span class="fw-bolder fs-4 font-monospace">
+                                    {% if caja.descuadre == 0 %}
+                                        S/ 0.00 (CUADRADO)
+                                    {% elif caja.descuadre > 0 %}
+                                        + S/ {{ "%.2f"|format(caja.descuadre) }} (SOBRANTE)
+                                    {% else %}
+                                        - S/ {{ "%.2f"|format(caja.descuadre|abs) }} (FALTANTE)
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <small class="text-muted d-block mb-1 text-uppercase fw-bold" style="font-size: 0.65rem;">Notas de la Sesión:</small>
+                    <div class="p-3 bg-light rounded-3 text-muted small border-start border-3 {% if caja.descuadre < 0 %}border-danger{% else %}border-success{% endif %}">
+                        {{ caja.observaciones if caja.observaciones else 'Sin observaciones adicionales registradas.' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if session.user_rol == 'admin' and caja.descuadre < 0 %}
+<div class="modal fade" id="modalResolver" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-body p-5 text-center">
+                <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex p-3 mb-4">
+                    <i class="bi bi-shield-lock-fill fs-1"></i>
+                </div>
+                <h3 class="fw-bolder">Autorización de Admin</h3>
+                <p class="text-muted">¿Confirma que el cajero ha repuesto físicamente los <b>S/ {{ "%.2f"|format(caja.descuadre|abs) }}</b> faltantes? Se guardará un registro de auditoría.</p>
+                
+                <form action="/caja/resolver/{{ caja.id }}" method="POST" class="mt-4 d-grid gap-2">
+                    <button type="submit" class="btn btn-danger btn-lg rounded-pill fw-bold py-3 shadow">Validar y Reponer Dinero</button>
+                    <button type="button" class="btn btn-light rounded-pill fw-bold text-muted" data-bs-dismiss="modal">Cancelar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+    /* Clases personalizadas para evitar los errores del linter de VS Code */
+    .panel-rojo { background: linear-gradient(135deg, #7f1d1d, #b91c1c); }
+    .panel-verde { background: linear-gradient(135deg, #064e3b, #059669); }
+    .btn-texto-rojo { color: #7f1d1d; }
+    .btn-texto-verde { color: #064e3b; }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulseRed { 
+        0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); } 
+        70% { box-shadow: 0 0 0 15px rgba(255, 255, 255, 0); } 
+        100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } 
+    }
+</style>
+{% endblock %}

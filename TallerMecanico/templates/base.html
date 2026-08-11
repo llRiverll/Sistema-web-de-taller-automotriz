@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Multiservicios Virgen de Chapi{% endblock %}</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/plugins/confirmDate/confirmDate.css">
+
+    <style>
+        /* ==========================================
+           DISEÑO PREMIUM PARA EL MENÚ LATERAL (SaaS)
+           ========================================== */
+        :root {
+            --sidebar-bg-top: #0f172a; 
+            --sidebar-bg-bottom: #020617;
+            --sidebar-hover: #1e293b;
+            --sidebar-text: #94a3b8;
+            --accent-color: #3b82f6; 
+        }
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            background-color: #f8fafc; 
+        }
+        
+        .sidebar { 
+            min-height: 100vh; 
+            background: linear-gradient(180deg, var(--sidebar-bg-top) 0%, var(--sidebar-bg-bottom) 100%);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.05);
+            z-index: 1000;
+        }
+        .sidebar-sticky { display: flex; flex-direction: column; height: 100vh; }
+        
+        .brand-logo { 
+            display: flex;
+            align-items: center;
+            padding: 1.5rem 1.2rem; 
+            margin-bottom: 0.5rem;
+            background-color: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+        }
+        .brand-logo i { font-size: 2rem; margin-right: 12px; color: var(--accent-color); }
+        .brand-text h5 { margin: 0; font-weight: 800; font-size: 1.1rem; color: white; letter-spacing: -0.5px;}
+        
+        .sidebar-menu { padding: 0 0.8rem; }
+        .nav-link { 
+            color: var(--sidebar-text); 
+            padding: 0.8rem 1.2rem; 
+            margin: 0.2rem 0; 
+            border-radius: 10px; 
+            transition: all 0.25s ease;
+            font-size: 0.95rem;
+            font-weight: 500; 
+            display: flex; 
+            align-items: center; 
+        }
+        .nav-link i { margin-right: 14px; font-size: 1.2rem; transition: transform 0.25s ease; }
+        .nav-link:hover { color: #f8fafc; background-color: var(--sidebar-hover); transform: translateX(5px); }
+        .nav-link:hover i { color: var(--accent-color); transform: scale(1.1); }
+        .nav-link.active { color: white; background-color: var(--accent-color); font-weight: 600; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+        .nav-link.active i { color: white; }
+
+        .menu-category { color: #475569; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 1.2rem 1.2rem 0.4rem; display: block; }
+
+        .sidebar-footer { padding: 1.2rem; border-top: 1px solid rgba(255,255,255,0.05); background-color: rgba(0,0,0,0.3); }
+        .user-profile { display: flex; align-items: center; padding: 0.6rem; margin-bottom: 0.8rem; border-radius: 10px; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); }
+        .user-avatar { width: 42px; height: 42px; min-width: 42px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; margin-right: 12px; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4); }
+        .user-info h6 { color: #f8fafc; margin: 0; font-size: 0.9rem; font-weight: 700; }
+        .user-info small { color: #64748b; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;}
+        
+        .logout-btn { color: #f87171 !important; background-color: rgba(239, 68, 68, 0.1); justify-content: center; font-weight: 600; }
+        .logout-btn:hover { background-color: #ef4444 !important; color: white !important; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25); }
+
+        main { background-color: #f8fafc; min-height: 100vh; padding-bottom: 3rem; }
+        .sidebar-menu::-webkit-scrollbar { width: 5px; }
+        .sidebar-menu::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-menu::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
+        .select2-container--bootstrap-5 .select2-selection { font-size: 0.95rem !important; padding: .5rem 1rem !important; height: auto !important; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse px-0">
+                <div class="position-sticky sidebar-sticky">
+                    
+                    <div class="brand-logo">
+                        <i class="bi bi-gear-wide-connected shadow-sm"></i>
+                        <div class="brand-text">
+                            <h5>Virgen de<br><span class="text-primary">Chapi</span></h5>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-menu flex-grow-1 overflow-auto mt-2">
+                        <ul class="nav flex-column">
+                            
+                            <span class="menu-category">Principal</span>
+                            <li class="nav-item">
+                                <a class="nav-link {% block active_dash %}{% endblock %}" href="/dashboard">
+                                    <i class="bi bi-grid-1x2-fill"></i> Panel de Control
+                                </a>
+                            </li>
+                            
+                            <span class="menu-category">Operativa</span>
+                            <li class="nav-item">
+                                <a class="nav-link {% block active_clientes %}{% endblock %}" href="/clientes">
+                                    <i class="bi bi-people-fill"></i> Clientes & Vehículos
+                                </a>
+                            </li>
+                            
+                            {% if session.user_rol in ['admin', 'mecanico'] %}
+                            <li class="nav-item">
+                                <a class="nav-link {% block active_taller %}{% endblock %}" href="/taller">
+                                    <i class="bi bi-car-front-fill"></i> Taller & Órdenes
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% if session.user_rol == 'admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link {% block active_inv %}{% endblock %}" href="/inventario">
+                                    <i class="bi bi-box-seam-fill"></i> Catálogo e Inventario
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% block active_inv_compras %}{% endblock %}" href="/inventario/compras/nueva">
+                                    <i class="bi bi-cart-plus-fill"></i> Ingreso de Mercadería
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% block active_historial_compras %}{% endblock %}" href="{{ url_for('historial_compras') }}">
+                                    <i class="bi bi-clock-history me-2"></i> Historial de Compras
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% if session.user_rol in ['admin', 'cajero'] %}
+                            <li class="nav-item">
+                                <a class="nav-link {% block active_proveedores %}{% endblock %}" href="/proveedores">
+                                    <i class="bi bi-truck"></i> Proveedores 
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% block active_caja %}{% endblock %}" href="/caja">
+                                    <i class="bi bi-cash-stack"></i> Caja & Facturación
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% if session.user_rol == 'admin' %}
+                            <span class="menu-category mt-3">Administración</span>
+                            <li class="nav-item">
+                                <a class="nav-link {% block active_reportes %}{% endblock %}" href="/reportes">
+                                    <i class="bi bi-graph-up-arrow"></i> Reportes Gerenciales
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% block active_usuarios %}{% endblock %}" href="/usuarios">
+                                    <i class="bi bi-people"></i> Gestión de Personal
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% block active_auditoria %}{% endblock %}" href="/auditoria">
+                                    <i class="bi bi-shield-check"></i> Auditoría y Logs
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% block active_configuracion %}{% endblock %}" href="/configuracion">
+                                    <i class="bi bi-gear-fill"></i> Ajustes del Sistema
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <div class="sidebar-footer">
+                        <div class="user-profile">
+                            <div class="user-avatar">
+                                {{ session.user_nombre[0]|upper if session.user_nombre else 'U' }}
+                            </div>
+                            <div class="user-info text-truncate">
+                                <h6 class="text-truncate">{{ session.user_nombre }}</h6>
+                                <small>{{ session.user_rol }}</small>
+                            </div>
+                        </div>
+                        <a class="nav-link logout-btn text-center rounded-pill" href="/logout">
+                            <i class="bi bi-power m-0 me-2"></i> Cerrar Sesión
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4 shadow-sm">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm rounded-3 fw-bold border-0" role="alert">
+                                {% if category == 'success' %}<i class="bi bi-check-circle-fill me-2 fs-5 align-middle"></i>{% endif %}
+                                {% if category == 'warning' %}<i class="bi bi-exclamation-triangle-fill me-2 fs-5 align-middle"></i>{% endif %}
+                                {% if category == 'danger' %}<i class="bi bi-shield-slash-fill me-2 fs-5 align-middle"></i>{% endif %}
+                                {{ message }}
+                                <button type="button" class="btn-close mt-1" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/plugins/confirmDate/confirmDate.js"></script>
+
+    {% block scripts %}{% endblock %} 
+</body>
+</html>

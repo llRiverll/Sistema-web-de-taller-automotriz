@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Editar {{ p.codigo }} - Virgen de Chapi{% endblock %}
+{% block active_inv %}active{% endblock %}
+
+{% block content %}
+<style>
+    /* Diseño Nativo "Flat Layout" */
+    .page-header { margin-bottom: 2.5rem; border-bottom: 1px solid #e1e3e5; padding-bottom: 1.5rem; }
+    .section-desc { color: #637381; font-size: 0.9rem; line-height: 1.6; }
+    .flat-panel { background: #ffffff; border: 1px solid #dfe3e8; border-radius: 8px; padding: 2rem; box-shadow: 0 1px 2px rgba(0,0,0,0.01); }
+    
+    .form-label { font-size: 0.85rem; font-weight: 600; color: #212b36; margin-bottom: 0.5rem; }
+    .form-control, .form-select { border: 1px solid #c4cdd5; border-radius: 6px; padding: 10px 14px; color: #212b36; background-color: #f9fafb; transition: all 0.2s; }
+    .form-control:focus, .form-select:focus { background-color: #ffffff; border-color: #6610f2; box-shadow: 0 0 0 3px rgba(102, 16, 242, 0.15); outline: none; }
+</style>
+
+<form method="POST" id="formEditarProducto">
+    <input type="hidden" name="tipo" value="{{ p.tipo }}">
+
+    <div class="page-header d-flex justify-content-between align-items-center mt-2">
+        <div>
+            <a href="/inventario" class="text-decoration-none text-muted mb-2 d-inline-block small fw-bold">
+                <i class="bi bi-arrow-left me-1"></i> Volver al catálogo
+            </a>
+            <div class="d-flex align-items-center">
+                <h2 class="m-0 fw-bolder text-dark me-3" style="letter-spacing: -0.5px;">Modificar Ítem</h2>
+                <span class="badge {{ 'bg-primary' if p.tipo == 'repuesto' else 'bg-info text-dark' }} rounded-pill px-3 py-2">
+                    {{ 'Repuesto Físico' if p.tipo == 'repuesto' else 'Servicio / Labor' }}
+                </span>
+            </div>
+        </div>
+        <div class="d-flex gap-3">
+            <a href="/inventario" class="btn btn-white border fw-bold px-4 py-2">Cancelar</a>
+            <button type="submit" class="btn btn-primary fw-bold px-5 py-2 shadow-sm" style="background-color: #6610f2; border-color: #6610f2;">
+                Guardar Cambios
+            </button>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-lg-4 mb-4 mb-lg-0 pe-lg-5">
+            <h5 class="fw-bold text-dark">Información General</h5>
+            <p class="section-desc">Modifique el nombre o las características. Tenga en cuenta que el código principal (SKU) no se puede alterar una vez registrado.</p>
+            
+            <div class="bg-light rounded p-3 mt-4 border border-secondary border-opacity-10">
+                <span class="d-block small fw-bold text-muted mb-1">Código Asignado (SKU)</span>
+                <input type="text" class="form-control-plaintext fw-bolder fs-5 text-primary p-0" name="codigo" value="{{ p.codigo }}" readonly>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="flat-panel">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <label class="form-label">Nombre / Descripción Corta <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control fw-bold" name="nombre" value="{{ p.nombre }}" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Categoría / Sistema</label>
+                        <input type="text" class="form-control" list="lista_cat" name="categoria" value="{{ p.categoria or '' }}">
+                        <datalist id="lista_cat">
+                            <option value="Motor"><option value="Frenos"><option value="Suspensión">
+                            <option value="Transmisión"><option value="Lubricantes"><option value="Filtros">
+                            <option value="Mantenimiento"><option value="Diagnóstico">
+                        </datalist>
+                    </div>
+
+                    {% if p.tipo == 'repuesto' %}
+                    <div class="col-md-6">
+                        <label class="form-label">Marca Fabricante</label>
+                        <input type="text" class="form-control text-uppercase" name="marca" value="{{ p.marca or '' }}">
+                    </div>
+                    {% else %}
+                        <input type="hidden" name="marca" value="">
+                    {% endif %}
+
+                    <div class="col-md-6">
+                        <label class="form-label">Unidad de Medida</label>
+                        <select class="form-select" name="unidad_medida">
+                            <option value="NIU" {{ 'selected' if p.unidad_medida == 'NIU' }}>UND - Unidad</option>
+                            <option value="LTR" {{ 'selected' if p.unidad_medida == 'LTR' }}>LTR - Litro</option>
+                            <option value="GLN" {{ 'selected' if p.unidad_medida == 'GLN' }}>GLN - Galón</option>
+                            <option value="KIT" {{ 'selected' if p.unidad_medida == 'KIT' }}>KIT - Kit Completo</option>
+                            <option value="GBL" {{ 'selected' if p.unidad_medida == 'GBL' }}>GBL - Global (Servicio)</option>
+                            <option value="HRA" {{ 'selected' if p.unidad_medida == 'HRA' }}>HRA - Hora (Servicio)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Aplicación a Vehículos</label>
+                        <select class="form-select fw-bold text-primary" name="aplicacion">
+                            <option value="Universal" {{ 'selected' if p.aplicacion == 'Universal' }}>Universal (Aplica a Todos)</option>
+                            <option value="Liviano (Autos/Camionetas)" {{ 'selected' if 'Liviano' in (p.aplicacion or '') }}>Vehículos Livianos</option>
+                            <option value="Pesado (Camiones/Buses)" {{ 'selected' if 'Pesado' in (p.aplicacion or '') }}>Vehículos Pesados</option>
+                            <option value="Maquinaria" {{ 'selected' if 'Maquinaria' in (p.aplicacion or '') }}>Maquinaria Amarilla</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Descripción Técnica Extendida</label>
+                        <textarea class="form-control" name="descripcion" rows="3">{{ p.descripcion }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="mb-5 border-secondary border-opacity-25">
+
+    <div class="row mb-5">
+        <div class="col-lg-4 mb-4 mb-lg-0 pe-lg-5">
+            <h5 class="fw-bold text-dark">Precios e Inventario</h5>
+            <p class="section-desc">Ajuste el precio de venta actual. Esto solo afectará a las futuras órdenes de trabajo para mantener el historial intacto.</p>
+        </div>
+        <div class="col-lg-8">
+            <div class="flat-panel">
+                <div class="row g-4">
+                    
+                    <div class="col-md-6">
+                        <label class="form-label text-success">PRECIO DE VENTA FINAL (S/) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" class="form-control border-success text-success fw-bolder fs-4" id="precio_venta" name="precio_venta" value="{{ p.precio_venta }}" required oninput="calcularIGV()">
+                        <div class="d-flex justify-content-between small fw-bold text-muted mt-2">
+                            <span>Base: S/ <span id="lbl_base">0.00</span></span>
+                            <span>IGV: S/ <span id="lbl_igv">0.00</span></span>
+                        </div>
+                    </div>
+
+                    {% if p.tipo == 'repuesto' %}
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Costo de Adquisición (CPP)</label>
+                        <input type="number" step="0.01" class="form-control bg-light text-muted fw-bold border-0" name="precio_compra" value="{{ p.precio_compra }}" readonly title="El CPP se calcula automáticamente al registrar nuevas compras.">
+                        <small class="text-primary mt-1 d-block" style="font-size: 0.7rem;">
+                            <i class="bi bi-lock-fill"></i> Calculado automáticamente en Ingresos.
+                        </small>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="row g-4 mt-1 border-top pt-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Stock Físico Actual</label>
+                                <input type="number" class="form-control fw-bold text-primary" name="stock_actual" value="{{ p.stock_actual }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-danger">Alerta de Stock Mínimo</label>
+                                <input type="number" class="form-control border-danger" name="stock_minimo" value="{{ p.stock_minimo }}">
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                        <input type="hidden" name="precio_compra" value="0.00">
+                        <input type="hidden" name="stock_actual" value="999">
+                        <input type="hidden" name="stock_minimo" value="0">
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    function calcularIGV() {
+        const total = parseFloat(document.getElementById('precio_venta').value) || 0;
+        const base = total / 1.18;
+        document.getElementById('lbl_base').textContent = base.toFixed(2);
+        document.getElementById('lbl_igv').textContent = (total - base).toFixed(2);
+    }
+    document.addEventListener("DOMContentLoaded", calcularIGV);
+</script>
+{% endblock %}

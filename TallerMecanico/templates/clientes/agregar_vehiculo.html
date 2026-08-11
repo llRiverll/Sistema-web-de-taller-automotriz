@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Agregar Vehículo - Virgen de Chapi{% endblock %}
+{% block active_clientes %}active{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilo Corporativo y Estructurado */
+    .card-enterprise { border-radius: 12px; border: 1px solid rgba(0,0,0,0.08); background-color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+    
+    /* Panel lateral colorido para VEHÍCULOS (Tonos Verdes) */
+    .sidebar-info-car { background: linear-gradient(135deg, #198754 0%, #146c43 100%); border-radius: 12px; color: white; padding: 2.5rem 2rem; height: 100%; box-shadow: 0 4px 15px rgba(25, 135, 84, 0.2); display: flex; flex-direction: column; justify-content: space-between; }
+    .sidebar-icon-car { font-size: 4rem; margin-bottom: 1rem; opacity: 0.9; }
+    
+    /* Estilos del formulario */
+    .form-control, .form-select { border-radius: 6px; padding: 12px 15px; border: 1px solid #ced4da; font-weight: 500; background-color: #fff; }
+    .form-control:focus, .form-select:focus { border-color: #198754; box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.15); }
+    .input-group-text { background-color: #f8f9fa; border-right: none; color: #495057; font-size: 1.1rem; }
+    .input-group .form-control, .input-group .form-select { border-left: none; padding-left: 0; }
+    .form-label { font-size: 0.8rem; letter-spacing: 0.5px; text-transform: uppercase; color: #495057; font-weight: 700; }
+    
+    /* Separadores de sección (Acento Verde) */
+    .section-header-car { background-color: #f8f9fa; padding: 12px 20px; border-left: 4px solid #198754; font-weight: 800; color: #212529; margin-bottom: 1.5rem; border-radius: 4px; display: flex; align-items: center; letter-spacing: 0.5px; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+    <h2 class="m-0 fw-bold text-dark"><i class="bi bi-car-front-fill text-success me-2"></i>Alta de Nueva Unidad</h2>
+    <a href="/clientes/perfil/{{ cliente.id }}" class="btn btn-light shadow-sm fw-bold rounded-pill px-4 border hover-shadow">
+        <i class="bi bi-arrow-left me-2"></i>Volver al Expediente
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4 d-none d-lg-block">
+        <div class="sidebar-info-car">
+            <div>
+                <div class="sidebar-icon-car"><i class="bi bi-truck-front-fill"></i></div>
+                <h3 class="fw-bold mb-3">Registro de Flota</h3>
+                
+                <div class="bg-white bg-opacity-10 rounded-3 p-3 mb-4 border border-white border-opacity-25">
+                    <span class="small text-white-50 text-uppercase fw-bold d-block mb-1">Propietario Asignado:</span>
+                    <h5 class="fw-bold m-0 text-white"><i class="bi bi-person-fill me-2"></i>{{ cliente.nombre_razon_social }}</h5>
+                    <span class="badge bg-light text-success mt-2">Cliente ID: #{{ "%04d"|format(cliente.id) }}</span>
+                </div>
+
+                <p class="opacity-75 mb-4" style="font-size: 0.95rem; line-height: 1.6;">
+                    Ingrese los datos técnicos de la unidad. La placa registrada será la llave principal para rastrear el historial de mantenimientos.
+                </p>
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-check-circle-fill text-light me-2 fs-5"></i>
+                    <span class="small fw-bold">Auto-formato de Placa (Mayúsculas y Guion)</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill text-light me-2 fs-5"></i>
+                    <span class="small fw-bold">Validación de Año de Fabricación</span>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-top border-light border-opacity-25">
+                <small class="opacity-75"><i class="bi bi-shield-check me-1"></i> Módulo de Flotas - Virgen de Chapi</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <form method="POST" action="/clientes/agregar_vehiculo/{{ cliente.id }}" class="card card-enterprise h-100" id="formVehiculo">
+            <div class="card-body p-4 p-md-5">
+                
+                <div class="section-header-car">
+                    <i class="bi bi-card-list text-success fs-4 me-2"></i> FICHA TÉCNICA DEL VEHÍCULO
+                </div>
+                
+                <div class="row g-4 mb-2">
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Placa del Vehículo <span class="text-danger">*</span></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text"><i class="bi bi-123"></i></span>
+                            <input type="text" class="form-control text-uppercase fw-bold text-dark" name="placa" id="inputPlaca" placeholder="Ej: ABC-123" required autofocus style="letter-spacing: 2px; font-size: 1.1rem;">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Clasificación <span class="text-danger">*</span></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text"><i class="bi bi-truck"></i></span>
+                            <select name="tipo" class="form-select text-dark fw-bold" required>
+                                <option value="Liviano" selected>Liviano (Auto, Camioneta)</option>
+                                <option value="Pesado">Pesado (Camión, Tracto, Bus)</option>
+                                <option value="Maquinaria">Maquinaria Pesada</option>
+                                <option value="Moto">Motocicleta / Trimoto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Marca Fabricante <span class="text-danger">*</span></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text"><i class="bi bi-tags"></i></span>
+                            <input type="text" class="form-control text-uppercase" name="marca" placeholder="Ej: TOYOTA, VOLVO..." required>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Modelo Específico <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control shadow-sm text-uppercase" name="modelo" placeholder="Ej: HILUX 4X4, FH16..." required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Año de Fabricación</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                            <input type="number" class="form-control" name="anio" id="inputAnio" placeholder="Ej: 2022" min="1950">
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Color Principal</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text"><i class="bi bi-palette"></i></span>
+                            <input type="text" class="form-control text-uppercase" name="color" placeholder="Ej: BLANCO, ROJO...">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="card-footer bg-light border-top py-4 px-4 px-md-5 d-flex justify-content-end">
+                <button type="submit" class="btn btn-success btn-lg fw-bold shadow-sm px-5 rounded-3">
+                    <i class="bi bi-save2-fill me-2"></i>Registrar Unidad
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const inputPlaca = document.getElementById("inputPlaca");
+        const inputAnio = document.getElementById("inputAnio");
+
+        // 1. Validar Placa: Solo letras y números, forzar mayúsculas
+        inputPlaca.addEventListener("input", function(e) {
+            // Eliminar espacios y caracteres especiales, forzar mayúscula
+            let valor = this.value.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase();
+            
+            // Lógica para auto-insertar el guion de la placa peruana (XXX-XXX)
+            if (valor.length === 3 && !valor.includes('-') && e.inputType !== 'deleteContentBackward') {
+                valor = valor + '-';
+            }
+            
+            this.value = valor.substring(0, 8); // Máximo 8 caracteres
+        });
+
+        // 2. Establecer el año máximo dinámicamente al año actual + 1 (Ej: autos 2027 vendidos en 2026)
+        const currentYear = new Date().getFullYear();
+        inputAnio.max = currentYear + 1;
+    });
+</script>
+{% endblock %}

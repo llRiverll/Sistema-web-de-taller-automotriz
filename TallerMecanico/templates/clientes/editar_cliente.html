@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}Editar Cliente - Virgen de Chapi{% endblock %}
+{% block active_clientes %}active{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilo Corporativo y Estructurado */
+    .card-enterprise { border-radius: 12px; border: 1px solid rgba(0,0,0,0.08); background-color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+    
+    /* Panel lateral colorido para EDICIÓN (Tonos Ámbar/Naranja) */
+    .sidebar-info-edit { background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%); border-radius: 12px; color: white; padding: 2.5rem 2rem; height: 100%; box-shadow: 0 4px 15px rgba(253, 126, 20, 0.2); display: flex; flex-direction: column; justify-content: space-between; }
+    .sidebar-icon-edit { font-size: 4rem; margin-bottom: 1rem; opacity: 0.9; }
+    
+    /* Estilos del formulario */
+    .form-control, .form-select { border-radius: 6px; padding: 12px 15px; border: 1px solid #ced4da; font-weight: 500; background-color: #fff; }
+    .form-control:focus, .form-select:focus { border-color: #fd7e14; box-shadow: 0 0 0 0.25rem rgba(253, 126, 20, 0.15); }
+    .input-group-text { background-color: #f8f9fa; border-right: none; color: #495057; font-size: 1.1rem; }
+    .input-group .form-control, .input-group .form-select { border-left: none; padding-left: 0; }
+    .form-label { font-size: 0.8rem; letter-spacing: 0.5px; text-transform: uppercase; color: #495057; font-weight: 700; }
+    
+    /* Separadores de sección (Acento Naranja) */
+    .section-header-edit { background-color: #f8f9fa; padding: 12px 20px; border-left: 4px solid #fd7e14; font-weight: 800; color: #212529; margin-bottom: 1.5rem; border-radius: 4px; display: flex; align-items: center; letter-spacing: 0.5px; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+    <h2 class="m-0 fw-bold text-dark"><i class="bi bi-pencil-square text-warning me-2"></i>Actualizar Expediente</h2>
+    <a href="/clientes/perfil/{{ cliente.cliente_id }}" class="btn btn-light shadow-sm fw-bold rounded-pill px-4 border hover-shadow">
+        <i class="bi bi-arrow-left me-2"></i>Cancelar Edición
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4 d-none d-lg-block">
+        <div class="sidebar-info-edit">
+            <div>
+                <div class="sidebar-icon-edit"><i class="bi bi-person-bounding-box"></i></div>
+                <h3 class="fw-bold mb-3">Modificación de Datos</h3>
+                <p class="opacity-75 mb-4" style="font-size: 0.95rem; line-height: 1.6;">
+                    Estás a punto de modificar el expediente oficial de este cliente. Verifica bien la información ingresada, ya que estos datos se reflejarán en sus facturas y boletas futuras.
+                </p>
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-exclamation-circle-fill text-warning me-2 fs-5"></i>
+                    <span class="small fw-bold">Actualización en tiempo real</span>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-exclamation-circle-fill text-warning me-2 fs-5"></i>
+                    <span class="small fw-bold">Mantiene el historial del vehículo</span>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-top border-light border-opacity-25">
+                <small class="opacity-75"><i class="bi bi-shield-check me-1"></i> Auditoría de Cambios - Virgen de Chapi</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <form method="POST" action="/clientes/editar/{{ cliente.cliente_id }}" class="card card-enterprise h-100" id="formClienteEdit">
+            <div class="card-body p-4 p-md-5">
+                
+                <div class="section-header-edit">
+                    <i class="bi bi-1-circle-fill text-warning fs-4 me-2"></i> IDENTIDAD PRINCIPAL
+                </div>
+                
+                <div class="row g-4 mb-5">
+                    <div class="col-md-5">
+                        <label class="form-label">Tipo de Documento <span class="text-danger">*</span></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text"><i class="bi bi-card-heading"></i></span>
+                            <select name="tipo_documento" id="tipo_doc" class="form-select fw-bold text-dark" required>
+                                <option value="DNI" {% if cliente.tipo_documento == 'DNI' %}selected{% endif %}>DNI</option>
+                                <option value="RUC" {% if cliente.tipo_documento == 'RUC' %}selected{% endif %}>RUC</option>
+                                <option value="CE" {% if cliente.tipo_documento == 'CE' %}selected{% endif %}>Carnet Extranjería</option>
+                                <option value="Pasaporte" {% if cliente.tipo_documento == 'Pasaporte' %}selected{% endif %}>Pasaporte</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-7">
+                        <label class="form-label">N° de Documento <span class="text-danger">*</span></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text"><i class="bi bi-123"></i></span>
+                            <input type="text" class="form-control fw-bold" name="numero_documento" id="num_doc" value="{{ cliente.numero_documento }}" required>
+                        </div>
+                        <div id="doc_error" class="text-danger small mt-2 fw-bold" style="display: none;">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Formato de documento inválido.
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Nombre Completo / Razón Social <span class="text-danger">*</span></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text"><i class="bi bi-building"></i></span>
+                            <input type="text" class="form-control text-uppercase" name="nombre" value="{{ cliente.nombre_completo }}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-header-edit">
+                    <i class="bi bi-2-circle-fill text-warning fs-4 me-2"></i> CONTACTO Y UBICACIÓN
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Teléfono / Celular <span class="text-danger">*</span></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                            <input type="text" class="form-control" name="telefono" value="{{ cliente.telefono }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Correo Electrónico</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text"><i class="bi bi-envelope-at"></i></span>
+                            <input type="email" class="form-control" name="email" value="{{ cliente.email or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <div class="p-3 bg-light border rounded-3">
+                            <label class="form-label mb-3"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Ubigeo Geográfico</label>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control shadow-sm" name="departamento" value="{{ cliente.departamento or '' }}" placeholder="Departamento">
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control shadow-sm" name="provincia" value="{{ cliente.provincia or '' }}" placeholder="Provincia">
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control shadow-sm" name="distrito" value="{{ cliente.distrito or '' }}" placeholder="Distrito">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Dirección Exacta / Referencia</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text"><i class="bi bi-signpost-split"></i></span>
+                            <input type="text" class="form-control" name="direccion" value="{{ cliente.direccion or '' }}" placeholder="Av. Principal, Calle, Nro...">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="card-footer bg-light border-top py-4 px-4 px-md-5 d-flex justify-content-end">
+                <button type="submit" class="btn btn-warning btn-lg fw-bold text-dark shadow-sm px-5 rounded-3" id="btnActualizar">
+                    <i class="bi bi-save2-fill me-2"></i>Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const tipoDoc = document.getElementById("tipo_doc");
+        const numDoc = document.getElementById("num_doc");
+        const docError = document.getElementById("doc_error");
+        const btnActualizar = document.getElementById("btnActualizar");
+
+        // Función que aplica las reglas (El parámetro 'limpiar' evita que se borre el DNI que viene de la BD al cargar)
+        function aplicarReglas(limpiar = false) {
+            let tipo = tipoDoc.value;
+            if (limpiar) numDoc.value = ""; 
+            docError.style.display = "none";
+            btnActualizar.disabled = false;
+
+            if (tipo === "DNI") {
+                numDoc.maxLength = 8;
+                numDoc.placeholder = "Exactamente 8 números";
+            } else if (tipo === "RUC") {
+                numDoc.maxLength = 11;
+                numDoc.placeholder = "Exactamente 11 números";
+            } else {
+                numDoc.maxLength = 20; 
+                numDoc.placeholder = "Letras o números permitidos";
+            }
+        }
+
+        numDoc.addEventListener("input", function(e) {
+            let tipo = tipoDoc.value;
+            if (tipo === "DNI" || tipo === "RUC") {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                let longitudValida = (tipo === "DNI" && this.value.length === 8) || 
+                                     (tipo === "RUC" && this.value.length === 11);
+                
+                if (!longitudValida && this.value.length > 0) {
+                    docError.style.display = "block";
+                    docError.innerHTML = `<i class="bi bi-x-circle-fill me-1"></i> El ${tipo} debe tener exactamente ${tipo === 'DNI' ? '8' : '11'} dígitos.`;
+                    btnActualizar.disabled = true;
+                } else {
+                    docError.style.display = "none";
+                    btnActualizar.disabled = false;
+                }
+            } else {
+                this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                docError.style.display = "none";
+                btnActualizar.disabled = false;
+            }
+        });
+
+        // Evento change: aquí sí limpiamos porque el usuario está cambiando el tipo a propósito
+        tipoDoc.addEventListener("change", function() { aplicarReglas(true); });
+        
+        // Inicialización: No limpiamos para conservar el dato que trae la Base de Datos
+        aplicarReglas(false); 
+    });
+</script>
+{% endblock %}

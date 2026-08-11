@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% block title %}Auditoría Forense - Virgen de Chapi{% endblock %}
+{% block active_auditoria %}active{% endblock %}
+
+{% block content %}
+<style>
+    :root { --glass-bg: rgba(255, 255, 255, 0.95); }
+    .card-custom { border-radius: 20px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.06); background: var(--glass-bg); }
+    
+    .table-modern thead th { background: #0f172a; color: #f8fafc; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; border: none; padding: 1.2rem 1rem; letter-spacing: 0.5px;}
+    .table-modern tbody td { padding: 1rem; vertical-align: middle; border-bottom: 1px solid #f1f5f9; color: #475569; font-weight: 500; font-size: 0.9rem;}
+    .table-modern tbody tr:hover { background-color: #f8fafc; transform: scale(1.002); transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
+    
+    .badge-modulo { font-weight: 800; font-size: 0.7rem; letter-spacing: 0.5px; padding: 0.4rem 0.8rem; border-radius: 6px; }
+    .ip-address { font-family: 'Courier New', Courier, monospace; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 0.2rem 0.6rem; border-radius: 4px;}
+    
+    .dot-pulse { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; box-shadow: 0 0 0 0 rgba(0, 0, 0, 1); transform: scale(1); animation: pulse 2s infinite; }
+    .risk-high { background: #ef4444; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    .risk-medium { background: #f59e0b; box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+    .risk-low { background: #10b981; animation: none; }
+    @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(var(--rgb), 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(var(--rgb), 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(var(--rgb), 0); } }
+
+    @media print { .d-print-none { display: none !important; } .card-custom { border: 1px solid #ddd; box-shadow: none; } }
+</style>
+
+<div class="container-fluid px-0 animate__animated animate__fadeIn">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="m-0 fw-black text-dark"><i class="bi bi-shield-lock-fill text-primary me-2"></i>Centro de Auditoría Forense</h2>
+            <p class="text-muted small mt-1 mb-0 d-print-none">Monitoreo de trazabilidad, niveles de riesgo y cambios en la base de datos.</p>
+        </div>
+        <div class="d-print-none">
+            <button id="btnResumenIA" class="btn fw-bold rounded-pill px-4 shadow hover-lift me-2" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none;">
+                <i class="bi bi-magic me-2"></i>Análisis con IA
+            </button>
+            <button class="btn btn-dark fw-bold rounded-pill px-4 shadow hover-lift me-2" onclick="window.print()">
+                <i class="bi bi-printer-fill me-2"></i>Imprimir
+            </button>
+            <a href="/auditoria/exportar" class="btn btn-success fw-bold rounded-pill px-4 shadow hover-lift" style="background: linear-gradient(135deg, #198754, #146c43); border: none;">
+                <i class="bi bi-file-earmark-excel-fill me-2"></i>Exportar Excel
+            </a>
+        </div>
+    </div>
+
+    <div class="card-custom overflow-hidden">
+        
+        <div class="bg-light p-3 border-bottom d-flex justify-content-between align-items-center d-print-none">
+            <div class="input-group" style="max-width: 400px;">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" id="buscadorLogs" class="form-control border-start-0 ps-0" placeholder="Buscar transacción o usuario...">
+            </div>
+            <div>
+                <span class="text-muted small fw-bold me-3">Nivel de Riesgo:</span>
+                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 me-2"><i class="dot-pulse risk-high" style="--rgb: 239, 68, 68;"></i> Crítico</span>
+                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"><i class="dot-pulse risk-medium" style="--rgb: 245, 158, 11;"></i> Modificación</span>
+            </div>
+        </div>
+
+        <div class="table-responsive" style="max-height: 650px; overflow-y: auto;">
+            <table class="table table-modern mb-0" id="tablaLogs">
+                <thead style="position: sticky; top: 0; z-index: 10;">
+                    <tr>
+                        <th width="15%">Fecha y Hora</th>
+                        <th width="20%">Responsable</th>
+                        <th width="15%">Módulo</th>
+                        <th width="30%">Acción Realizada</th>
+                        <th width="10%" class="text-center">Origen IP</th>
+                        <th width="10%" class="text-center d-print-none">Detalles</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    
+                    {% set accion_upper = log.accion | upper %}
+                    {% if 'ELIMINÓ' in accion_upper or 'ANULÓ' in accion_upper or 'BORRÓ' in accion_upper %}
+                        {% set riesgo_clase = 'risk-high' %}
+                        {% set color_rgb = '239, 68, 68' %}
+                    {% elif 'ACTUALIZÓ' in accion_upper or 'EDITÓ' in accion_upper or 'MODIFICÓ' in accion_upper or 'CAMBIÓ' in accion_upper %}
+                        {% set riesgo_clase = 'risk-medium' %}
+                        {% set color_rgb = '245, 158, 11' %}
+                    {% else %}
+                        {% set riesgo_clase = 'risk-low' %}
+                        {% set color_rgb = '16, 185, 129' %}
+                    {% endif %}
+
+                    <tr class="log-row">
+                        <td class="fw-bold text-dark">
+                            <i class="bi bi-clock-history text-muted me-1 d-print-none"></i>
+                            {{ log.fecha_hora.strftime('%d/%m/%Y %H:%M') if log.fecha_hora else '--' }}
+                        </td>
+                        
+                        <td>
+                            {% if log.nombre_completo %}
+                                <div class="fw-bold text-primary">{{ log.nombre_completo }}</div>
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 mt-1 d-inline-block" style="font-size: 0.65rem;">
+                                    <i class="bi bi-person-badge d-print-none"></i> {{ log.rol|upper }}
+                                </span>
+                            {% else %}
+                                <span class="text-danger fw-bold"><i class="bi bi-incognito me-1"></i>Sistema / Root</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if 'INVENTARIO' in log.modulo|upper %}
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 badge-modulo"><i class="bi bi-box-seam me-1 d-print-none"></i>{{ log.modulo }}</span>
+                            {% elif 'CAJA' in log.modulo|upper %}
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 badge-modulo"><i class="bi bi-cash me-1 d-print-none"></i>{{ log.modulo }}</span>
+                            {% elif 'SEGURIDAD' in log.modulo|upper or 'LOGIN' in log.modulo|upper or 'ADMINISTRACIÓN' in log.modulo|upper %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 badge-modulo"><i class="bi bi-shield-lock me-1 d-print-none"></i>{{ log.modulo }}</span>
+                            {% else %}
+                                <span class="badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25 badge-modulo"><i class="bi bi-grid me-1 d-print-none"></i>{{ log.modulo }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="dot-pulse {{ riesgo_clase }} d-print-none" style="--rgb: {{ color_rgb }};"></i>
+                                <span class="fw-bold text-dark">{{ log.accion }}</span>
+                            </div>
+                        </td>
+                        
+                        <td class="text-center">
+                            <span class="ip-address">{{ log.direccion_ip or 'Localhost' }}</span>
+                        </td>
+
+                        <td class="text-center d-print-none">
+                            {% if log.detalles %}
+                                <button class="btn btn-sm btn-primary rounded-pill fw-bold shadow-sm px-3 hover-lift" 
+                                        data-detalles="{{ log.detalles | e }}" 
+                                        data-modulo="{{ log.modulo }}" 
+                                        data-accion="{{ log.accion }}"
+                                        data-ip="{{ log.direccion_ip or 'Localhost' }}"
+                                        onclick="abrirReporte(this)" 
+                                        title="Ver Reporte">
+                                    <i class="bi bi-file-text-fill me-1"></i> Reporte
+                                </button>
+                            {% else %}
+                                <span class="text-muted opacity-25 fw-bold"><i class="bi bi-dash-lg"></i></span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-shield-x display-4 d-block mb-3 opacity-25 d-print-none"></i>
+                            <span class="fw-bold fs-5">Aún no hay registros de auditoría</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDetalles" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+            
+            <div class="modal-header bg-dark text-white border-0 py-3">
+                <h5 class="modal-title fw-black"><i class="bi bi-fingerprint text-info me-2"></i> Inspección de Registro</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-0">
+                <div class="bg-secondary bg-opacity-10 p-4 border-bottom">
+                    <h6 class="text-uppercase fw-bold text-muted mb-3" style="font-size: 0.8rem; letter-spacing: 1px;">METADATA DEL SISTEMA</h6>
+                    <div class="row g-3" style="font-family: 'Courier New', Courier, monospace; font-size: 0.9rem;">
+                        <div class="col-6">
+                            <span class="text-muted d-block">Módulo Afectado:</span>
+                            <b class="text-dark fs-6" id="mdlModulo"></b>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted d-block">Dirección IP de Origen:</span>
+                            <b class="text-primary" id="mdlIP"></b>
+                        </div>
+                        <div class="col-12">
+                            <span class="text-muted d-block">Acción Ejecutada:</span>
+                            <b class="text-danger" id="mdlAccion"></b>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-database-check text-success me-2"></i> Valores Modificados (Carga Útil)</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm m-0" style="font-family: monospace; font-size: 0.9rem;">
+                            <tbody id="mdlTablaDatos">
+                                </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-light rounded border border-warning border-opacity-50">
+                        <small class="text-muted fw-bold"><i class="bi bi-shield-exclamation text-warning me-1"></i> Sello de Inmutabilidad:</small>
+                        <p class="mb-0 mt-1 small text-dark">Este registro es de solo lectura y no puede ser alterado ni por administradores de base de datos.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalIA" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+            <div class="modal-header text-white border-0" style="background: linear-gradient(135deg, #1e1b4b, #4338ca);">
+                <h5 class="modal-title fw-black"><i class="bi bi-robot me-2 text-warning"></i>Reporte del Auditor Virtual</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <div id="iaCargando" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+                    <p class="mt-3 fw-bold text-muted animate__animated animate__pulse animate__infinite">La Inteligencia Artificial está analizando los registros...</p>
+                </div>
+                
+                <div id="iaResultado" class="d-none animate__animated animate__fadeIn">
+                    <div class="card border-0 shadow-sm" style="background-color: #f8fafc;">
+                        <div class="card-body p-4" style="border-left: 5px solid #4f46e5; border-radius: 8px; background: white;">
+                            
+                            <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                                <div class="bg-primary bg-opacity-10 p-2 rounded text-primary me-3">
+                                    <i class="bi bi-clipboard-data-fill fs-5"></i>
+                                </div>
+                                <div>
+                                    <h6 class="m-0 fw-black text-dark text-uppercase" style="letter-spacing: 0.5px;">Resumen Ejecutivo</h6>
+                                    <small class="text-muted fw-bold">Análisis de la Jornada Actual</small>
+                                </div>
+                            </div>
+                            
+                            <div id="textoResumenIA" class="text-dark" style="font-size: 0.95rem; line-height: 1.8; text-align: justify; font-weight: 500;">
+                                </div>
+                            
+                            <div class="mt-4 pt-3 border-top text-end">
+                                <small class="text-muted fw-bold"><i class="bi bi-shield-check text-success me-1"></i> Informe de Auditoría Inteligente</small>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    // Buscador en tiempo real
+    document.getElementById('buscadorLogs').addEventListener('keyup', function() {
+        let filtro = this.value.toLowerCase();
+        let filas = document.querySelectorAll('.log-row');
+        filas.forEach(fila => {
+            let texto = fila.textContent.toLowerCase();
+            fila.style.display = texto.includes(filtro) ? '' : 'none';
+        });
+    });
+
+    // ABRIR EL REPORTE INDIVIDUAL (El Modal Forense)
+    function abrirReporte(boton) {
+        let jsonString = boton.getAttribute('data-detalles');
+        let modulo = boton.getAttribute('data-modulo');
+        let accion = boton.getAttribute('data-accion');
+        let ip = boton.getAttribute('data-ip') || 'Localhost';
+
+        // Llenar Metadata Superior
+        document.getElementById('mdlModulo').innerText = modulo;
+        document.getElementById('mdlAccion').innerText = accion;
+        document.getElementById('mdlIP').innerText = ip;
+
+        // Llenar Tabla Central
+        let tbody = document.getElementById('mdlTablaDatos');
+        tbody.innerHTML = ''; 
+
+        try {
+            let cleanString = jsonString.replace(/'/g, '"').replace(/None/g, 'null').replace(/True/g, 'true').replace(/False/g, 'false');
+            let obj = JSON.parse(cleanString);
+
+            if (obj && Object.keys(obj).length > 0) {
+                for (let llave in obj) {
+                    let valor = obj[llave];
+                    
+                    // Si el sistema detecta que es dinero, le pone "S/" automáticamente
+                    if (llave.toLowerCase().includes('monto') || llave.toLowerCase().includes('precio') || llave.toLowerCase().includes('igv')) {
+                        if(!isNaN(valor)) valor = 'S/ ' + parseFloat(valor).toFixed(2);
+                    }
+                    
+                    let fila = `<tr>
+                                    <td class="bg-light text-uppercase fw-bold text-secondary" width="40%">${llave.replace(/_/g, ' ')}</td>
+                                    <td class="text-dark fw-bold">${valor}</td>
+                                </tr>`;
+                    tbody.innerHTML += fila;
+                }
+            } else {
+                tbody.innerHTML = '<tr><td colspan="2" class="text-center text-muted">No hay carga de datos adicionales.</td></tr>';
+            }
+        } catch (e) {
+            let textoHumano = jsonString.replace(/[{}"']/g, '').replace(/,/g, ' | ');
+            tbody.innerHTML = `<tr><td colspan="2" class="text-dark fw-bold">${textoHumano}</td></tr>`;
+        }
+
+        var myModal = new bootstrap.Modal(document.getElementById('modalDetalles'));
+        myModal.show();
+    }
+
+    // LÓGICA DEL BOTÓN DE INTELIGENCIA ARTIFICIAL
+    document.getElementById('btnResumenIA').addEventListener('click', function() {
+        var miModalElement = document.getElementById('modalIA');
+        var modalIA = bootstrap.Modal.getOrCreateInstance(miModalElement);
+        
+        document.getElementById('iaCargando').classList.remove('d-none');
+        document.getElementById('iaResultado').classList.add('d-none');
+        modalIA.show();
+
+        fetch('/auditoria/resumen_ia')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('iaCargando').classList.add('d-none');
+                
+                if(data.status === 'success') {
+                    // Como el nuevo prompt manda HTML directo, solo lo inyectamos
+                    document.getElementById('textoResumenIA').innerHTML = data.resumen;
+                    document.getElementById('iaResultado').classList.remove('d-none');
+                } else {
+                    document.getElementById('textoResumenIA').innerHTML = `<span class="text-danger fw-bold"><i class="bi bi-x-circle me-1"></i> ${data.message}</span>`;
+                    document.getElementById('iaResultado').classList.remove('d-none');
+                }
+            })
+            .catch(error => {
+                document.getElementById('iaCargando').classList.add('d-none');
+                document.getElementById('textoResumenIA').innerHTML = '<span class="text-danger fw-bold">Error de conexión con los servidores de IA.</span>';
+                document.getElementById('iaResultado').classList.remove('d-none');
+            });
+    });
+</script>
+{% endblock %}
+{% endblock %}

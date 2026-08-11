@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% block title %}Nuevo Item - Virgen de Chapi{% endblock %}
+{% block active_inv %}active{% endblock %}
+
+{% block content %}
+<style>
+    /* Tarjetas de Selección (Paso 1) */
+    .selection-card { background: #fff; border: 2px solid #e9ecef; border-radius: 20px; padding: 3rem 2rem; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); height: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .selection-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); }
+    .card-repuesto:hover { border-color: #6610f2; }
+    .card-servicio:hover { border-color: #0dcaf0; }
+    
+    .icon-wrapper { width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 1.5rem; transition: all 0.3s; }
+    .card-repuesto .icon-wrapper { background-color: rgba(102, 16, 242, 0.1); color: #6610f2; }
+    .card-servicio .icon-wrapper { background-color: rgba(13, 202, 240, 0.1); color: #087990; }
+    
+    .card-repuesto:hover .icon-wrapper { background-color: #6610f2; color: #fff; box-shadow: 0 10px 20px rgba(102, 16, 242, 0.3); }
+    .card-servicio:hover .icon-wrapper { background-color: #0dcaf0; color: #fff; box-shadow: 0 10px 20px rgba(13, 202, 240, 0.3); }
+
+    /* Estilos del Formulario (Paso 2) */
+    .card-form { border: none; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.04); background: #ffffff; border-top: 5px solid transparent; }
+    .form-control, .form-select { border-radius: 8px; border: 1px solid #ced4da; padding: 12px 15px; background-color: #f8f9fa; font-weight: 600; color: #212529; transition: all 0.2s; }
+    .form-control:focus, .form-select:focus { background-color: #fff; }
+    .form-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #495057; }
+    .section-title { padding: 10px 15px; border-radius: 6px; font-weight: 800; margin-bottom: 1.5rem; display: flex; align-items: center; }
+
+    /* Temas Dinámicos */
+    .theme-repuesto .sidebar-info-inv { background: linear-gradient(135deg, #6610f2 0%, #4c0bd1 100%); }
+    .theme-repuesto .card-form { border-top-color: #6610f2; }
+    .theme-repuesto .section-title { background-color: rgba(102, 16, 242, 0.1); color: #6610f2; }
+    .theme-repuesto .form-control:focus, .theme-repuesto .form-select:focus { border-color: #6610f2; box-shadow: 0 0 0 0.25rem rgba(102, 16, 242, 0.15); }
+
+    .theme-servicio .sidebar-info-inv { background: linear-gradient(135deg, #0dcaf0 0%, #087990 100%); }
+    .theme-servicio .card-form { border-top-color: #0dcaf0; }
+    .theme-servicio .section-title { background-color: rgba(13, 202, 240, 0.15); color: #087990; }
+    .theme-servicio .form-control:focus, .theme-servicio .form-select:focus { border-color: #0dcaf0; box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.15); }
+
+    .sidebar-info-inv { border-radius: 12px; color: white; padding: 2.5rem 2rem; height: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: space-between; transition: background 0.4s; }
+</style>
+
+<div id="pantalla_seleccion" class="container py-4 animate__animated animate__fadeIn">
+    <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3">
+        <h2 class="m-0 fw-bold text-dark"><i class="bi bi-ui-radios-grid text-primary me-2"></i>Asistente de Registro</h2>
+        <a href="/inventario" class="btn btn-light shadow-sm fw-bold rounded-pill px-4 border">
+            <i class="bi bi-x-lg me-2"></i>Cancelar
+        </a>
+    </div>
+
+    <div class="text-center mb-5">
+        <h1 class="fw-bolder text-dark mb-3">¿Qué deseas registrar en el Catálogo?</h1>
+        <p class="text-muted fs-5">Selecciona la naturaleza del ítem para cargar el formulario correcto.</p>
+    </div>
+
+    <div class="row justify-content-center g-4 max-w-800 mx-auto" style="max-width: 800px;">
+        <div class="col-md-6">
+            <div class="selection-card card-repuesto" onclick="iniciarFormulario('repuesto')">
+                <div class="icon-wrapper"><i class="bi bi-box-seam-fill"></i></div>
+                <h3 class="fw-bold text-dark mb-2">Producto / Repuesto</h3>
+                <p class="text-muted small">Ítem físico de almacén. Requiere control de stock, costo de adquisición y marca de fabricante.</p>
+                <span class="badge bg-primary bg-opacity-10 text-primary mt-3 px-3 py-2 rounded-pill">Se generará: {{ next_rep }}</span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="selection-card card-servicio" onclick="iniciarFormulario('servicio')">
+                <div class="icon-wrapper"><i class="bi bi-wrench-adjustable-circle-fill"></i></div>
+                <h3 class="fw-bold text-dark mb-2">Servicio / Mano de Obra</h3>
+                <p class="text-muted small">Trabajo realizado por los mecánicos. No requiere inventario físico ni costo de compra base.</p>
+                <span class="badge bg-info bg-opacity-10 text-dark mt-3 px-3 py-2 rounded-pill">Se generará: {{ next_srv }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="pantalla_formulario" style="display: none;" class="animate__animated animate__fadeInRight">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <div>
+            <button class="btn btn-light shadow-sm fw-bold rounded-pill px-4 border me-3" onclick="volverSeleccion()">
+                <i class="bi bi-arrow-left me-2"></i>Cambiar Tipo
+            </button>
+            <h3 class="m-0 fw-bolder text-dark d-inline-block align-middle" id="titulo_formulario">Registro de Ítem</h3>
+        </div>
+    </div>
+
+    <form method="POST" id="formNuevoProducto" class="row g-4 theme-repuesto">
+        <input type="hidden" name="tipo" id="input_tipo_final">
+
+        <div class="col-lg-4 d-none d-lg-block">
+            <div class="sidebar-info-inv" id="sidebar_panel">
+                <div>
+                    <div class="sidebar-icon-inv" id="sidebar_icon"><i class="bi bi-boxes"></i></div>
+                    <h3 class="fw-bold mb-3" id="sidebar_title">Nuevo Ítem</h3>
+                    <p class="opacity-75 mb-4" style="font-size: 0.95rem; line-height: 1.6;">
+                        Complete la información técnica. El sistema ha adaptado los campos para coincidir con la naturaleza de este registro.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card card-form h-100" id="main_card">
+                <div class="card-body p-4 p-md-5">
+                    
+                    <div class="section-title">
+                        <i class="bi bi-tags-fill me-2 fs-5"></i> 1. Identificación
+                    </div>
+
+                    <div class="row g-4 mb-5">
+                        <div class="col-md-4">
+                            <label class="form-label text-muted">Código</label>
+                            <input type="text" class="form-control fw-bolder fs-5 text-center bg-light" id="codigo" name="codigo" readonly>
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="form-label">Nombre / Descripción Principal <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="nombre" required placeholder="Ej: Filtro de Aceite / Revisión General...">
+                        </div>
+
+                        <div class="col-md-6" id="campo_marca">
+                            <label class="form-label">Marca o Fabricante</label>
+                            <input class="form-control text-uppercase" list="listado_marcas" name="marca" id="marca_input">
+                            <datalist id="listado_marcas">
+                                <option value="Toyota"><option value="Nissan"><option value="Bosch"><option value="Original (OEM)">
+                            </datalist>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Categoría o Sistema</label>
+                            <select class="form-select" name="categoria">
+                                <option value="General">-- Seleccionar --</option>
+                                <option value="Motor">Motor / Propulsión</option>
+                                <option value="Frenos">Frenos</option>
+                                <option value="Suspensión">Suspensión y Dirección</option>
+                                <option value="Eléctrico">Sistema Eléctrico</option>
+                                <option value="Mantenimiento">Servicios de Mantenimiento</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Unidad de Medida</label>
+                            <select class="form-select" name="unidad_medida" id="unidad_medida">
+                                <optgroup label="Físicos" id="optgroup_fisicos">
+                                    <option value="NIU">UND - Por Unidad</option>
+                                    <option value="LTR">LTR - Por Litro</option>
+                                    <option value="GLN">GLN - Por Galón</option>
+                                    <option value="KIT">KIT - Kit Completo</option>
+                                </optgroup>
+                                <optgroup label="Servicios" id="optgroup_servicios" style="display: none;">
+                                    <option value="GBL">GBL - Tarifa Fija Global</option>
+                                    <option value="HRA">HRA - Por Hora Hombre</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Aplicación a Vehículos</label>
+                            <select class="form-select" name="aplicacion">
+                                <option value="Universal">Universal (Aplica a Todos)</option>
+                                <option value="Liviano (Autos/Camionetas)">Solo Vehículos Livianos</option>
+                                <option value="Pesado (Camiones/Buses)">Solo Vehículos Pesados</option>
+                                <option value="Maquinaria">Maquinaria Amarilla</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Notas Técnicas Adicionales</label>
+                            <textarea class="form-control" name="descripcion" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="section-title">
+                        <i class="bi bi-cash-coin me-2 fs-5"></i> 2. Precios e Inventario
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="p-4 rounded-4 border border-success border-opacity-25 bg-success bg-opacity-10 h-100">
+                                <label class="form-label fw-bold text-success mb-2">Precio de Venta (S/) <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-lg shadow-sm mb-2">
+                                    <span class="input-group-text bg-success text-white border-success">S/</span>
+                                    <input type="number" step="0.01" class="form-control border-success text-success fw-bolder fs-3" id="precio_venta" name="precio_venta" required oninput="calcularIGV()" placeholder="0.00">
+                                </div>
+                                <div class="d-flex justify-content-between small fw-bold text-success text-opacity-75 px-1">
+                                    <span>Valor Neto: S/ <span id="lbl_base">0.00</span></span>
+                                    <span>IGV: S/ <span id="lbl_igv">0.00</span></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6" id="panel_inventario">
+                            <div class="p-4 rounded-4 border border-secondary border-opacity-25 bg-light h-100">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label">Costo de Compra (S/)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white">S/</span>
+                                            <input type="number" step="0.01" class="form-control bg-white" name="precio_compra" id="precio_compra" placeholder="0.00">
+                                        </div>
+                                    </div>
+                                    <div class="col-6 mt-4">
+                                        <label class="form-label">Stock Inicial</label>
+                                        <input type="number" class="form-control fw-bold text-center fs-5" name="stock_actual" id="stock_actual" value="0">
+                                    </div>
+                                    <div class="col-6 mt-4">
+                                        <label class="form-label text-danger">Stock Mínimo</label>
+                                        <input type="number" class="form-control border-danger text-center fs-5" name="stock_minimo" id="stock_minimo" value="5">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-footer bg-white border-top py-4 px-4 px-md-5 d-flex justify-content-end gap-3 rounded-bottom-4">
+                    <button type="submit" class="btn fw-bold shadow px-5 py-3 text-white" id="btn_submit" style="font-size: 1.1rem; border-radius: 12px;">
+                        </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    const NEXT_REP = "{{ next_rep }}";
+    const NEXT_SRV = "{{ next_srv }}";
+    
+    // Transiciones y Formularios
+    function iniciarFormulario(modo) {
+        // Animaciones
+        document.getElementById('pantalla_seleccion').style.display = 'none';
+        document.getElementById('pantalla_formulario').style.display = 'block';
+        
+        const form = document.getElementById('formNuevoProducto');
+        const inputTipo = document.getElementById('input_tipo_final');
+        const btnSubmit = document.getElementById('btn_submit');
+        
+        inputTipo.value = modo; // Aquí le decimos a Python qué estamos guardando
+        
+        if (modo === 'repuesto') {
+            form.className = 'row g-4 theme-repuesto';
+            document.getElementById('titulo_formulario').innerText = 'Registrando Repuesto';
+            document.getElementById('sidebar_icon').innerHTML = '<i class="bi bi-box-seam-fill"></i>';
+            document.getElementById('sidebar_title').innerText = 'Ficha de Repuesto';
+            
+            btnSubmit.style.backgroundColor = '#6610f2';
+            btnSubmit.innerHTML = '<i class="bi bi-save2-fill me-2"></i>GUARDAR REPUESTO';
+
+            // Activar campos de inventario
+            document.getElementById('campo_marca').style.display = 'block';
+            document.getElementById('panel_inventario').style.display = 'block';
+            document.getElementById('optgroup_fisicos').style.display = 'block';
+            document.getElementById('optgroup_servicios').style.display = 'none';
+            document.getElementById('codigo').value = NEXT_REP;
+            document.getElementById('unidad_medida').value = 'NIU';
+            
+            // Limpiar valores ocultos
+            document.getElementById('stock_actual').value = '0';
+            document.getElementById('stock_minimo').value = '5';
+            
+        } else {
+            form.className = 'row g-4 theme-servicio';
+            document.getElementById('titulo_formulario').innerText = 'Registrando Servicio';
+            document.getElementById('sidebar_icon').innerHTML = '<i class="bi bi-wrench-adjustable-circle-fill"></i>';
+            document.getElementById('sidebar_title').innerText = 'Ficha de Servicio';
+            
+            btnSubmit.style.backgroundColor = '#087990';
+            btnSubmit.innerHTML = '<i class="bi bi-save2-fill me-2"></i>GUARDAR SERVICIO';
+
+            // Ocultar campos de inventario
+            document.getElementById('campo_marca').style.display = 'none';
+            document.getElementById('panel_inventario').style.display = 'none';
+            document.getElementById('optgroup_fisicos').style.display = 'none';
+            document.getElementById('optgroup_servicios').style.display = 'block';
+            document.getElementById('codigo').value = NEXT_SRV;
+            document.getElementById('unidad_medida').value = 'GBL';
+            
+            // Asignar valores por defecto ocultos
+            document.getElementById('marca_input').value = '';
+            document.getElementById('precio_compra').value = '0.00';
+            document.getElementById('stock_actual').value = '999';
+            document.getElementById('stock_minimo').value = '0';
+        }
+    }
+
+    function volverSeleccion() {
+        document.getElementById('pantalla_formulario').style.display = 'none';
+        document.getElementById('pantalla_seleccion').style.display = 'block';
+    }
+
+    function calcularIGV() {
+        const total = parseFloat(document.getElementById('precio_venta').value) || 0;
+        const base = total / 1.18;
+        document.getElementById('lbl_base').textContent = base.toFixed(2);
+        document.getElementById('lbl_igv').textContent = (total - base).toFixed(2);
+    }
+</script>
+{% endblock %}

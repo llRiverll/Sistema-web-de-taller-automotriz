@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Virgen de Chapi{% endblock %}
+{% block active_dash %}active{% endblock %}
+
+{% block content %}
+<style>
+    body { background-color: #f8fafc; }
+    .hover-lift { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease; }
+    .hover-lift:hover { transform: translateY(-7px); box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important; }
+    .transition-all { transition: all 0.3s ease; }
+    
+    .bg-grad-primary { background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); }
+    .bg-grad-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+    .bg-grad-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .bg-grad-danger  { background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%); }
+    
+    .fw-black { font-weight: 900; letter-spacing: -0.5px; }
+    .text-shadow { text-shadow: 2px 4px 8px rgba(0,0,0,0.15); }
+    .letter-spacing-1 { letter-spacing: 1px; text-transform: uppercase; }
+    
+    .watermark-icon { position: absolute; font-size: 7.5rem; opacity: 0.1; right: -10px; bottom: -20px; transform: rotate(-10deg); z-index: 0; pointer-events: none; transition: all 0.4s ease; }
+    .hover-lift:hover .watermark-icon { transform: rotate(0deg) scale(1.1); opacity: 0.2; }
+    
+    .quick-action-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; position: relative; overflow: hidden; }
+    .quick-action-card:hover { border-color: #cbd5e1; background: #f8fafc; }
+    .quick-action-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background-color: transparent; transition: background-color 0.3s; }
+    .quick-action-card:hover::before { background-color: #3b82f6; }
+    .icon-box { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+
+    /* ESTILOS DEL NUEVO CENTRO DE NOTIFICACIONES */
+    .nav-pills-custom .nav-link { color: #64748b; font-weight: 700; border-radius: 12px; padding: 0.8rem 1.2rem; margin-right: 0.5rem; border: 1px solid transparent; transition: all 0.2s; }
+    .nav-pills-custom .nav-link:hover { background-color: #f1f5f9; }
+    .nav-pills-custom .nav-link.active { background-color: #ffffff; color: #0f172a; box-shadow: 0 4px 6px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
+    
+    .alert-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem; transition: 0.2s; }
+    .alert-item:hover { border-color: #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.03); transform: translateY(-2px); }
+    .alert-icon-box { width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+    <div>
+        <h2 class="display-6 fw-black text-dark mb-0" style="letter-spacing: -1.5px;">Panel de Inteligencia</h2>
+        <p class="text-muted fw-bold mb-0 fs-6">Visión global de operaciones y finanzas en tiempo real.</p>
+    </div>
+    <div class="bg-white px-4 py-2 rounded-pill shadow-sm border border-light-subtle d-flex align-items-center">
+        <div class="text-primary me-2"><i class="bi bi-calendar-event-fill fs-5"></i></div>
+        <span class="text-dark fw-bolder fs-6">{{ fecha_actual }}</span>
+    </div>
+</div>
+
+<!-- 1. TARJETAS KPI -->
+<div class="row mb-5 g-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 bg-grad-primary hover-lift">
+            <div class="card-body p-4 position-relative z-1">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-white fw-bold small letter-spacing-1 opacity-75">Carga Operativa</span>
+                    <div class="bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;"><i class="bi bi-tools text-white fs-5"></i></div>
+                </div>
+                <h2 class="text-white fw-black display-4 mb-0 text-shadow">{{ kpis.autos_taller }}</h2>
+                <div class="text-white-50 small fw-medium mt-2"><i class="bi bi-arrow-right-circle-fill me-1"></i> Vehículos en taller</div>
+                <i class="bi bi-car-front-fill watermark-icon text-white"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 bg-grad-warning hover-lift">
+            <div class="card-body p-4 position-relative z-1">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-white fw-bold small letter-spacing-1 opacity-75">Entregas Programadas</span>
+                    <div class="bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;"><i class="bi bi-calendar-check-fill text-white fs-5"></i></div>
+                </div>
+                <h2 class="text-white fw-black display-4 mb-0 text-shadow">{{ kpis.entregas_hoy }}</h2>
+                <div class="text-white-50 small fw-medium mt-2"><i class="bi bi-flag-fill me-1"></i> Finalizan el día de hoy</div>
+                <i class="bi bi-key-fill watermark-icon text-white"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 bg-grad-success hover-lift">
+            <div class="card-body p-4 position-relative z-1">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-white fw-bold small letter-spacing-1 opacity-75">Ingresos de Caja</span>
+                    <div class="bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;"><i class="bi bi-currency-dollar text-white fs-5"></i></div>
+                </div>
+                <h3 class="text-white fw-black mt-2 mb-0 text-shadow">S/ {{ "%.2f"|format(kpis.ventas_hoy) }}</h3>
+                <div class="text-white-50 small fw-medium mt-2"><i class="bi bi-graph-up text-white me-1"></i> Facturado hoy</div>
+                <i class="bi bi-graph-up-arrow watermark-icon text-white"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 bg-grad-danger hover-lift">
+            <div class="card-body p-4 position-relative z-1">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-white fw-bold small letter-spacing-1 opacity-75">Riesgo de Inventario</span>
+                    <div class="bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;"><i class="bi bi-box-seam-fill text-white fs-5"></i></div>
+                </div>
+                <h2 class="text-white fw-black display-4 mb-0 text-shadow">{{ kpis.alertas_stock }}</h2>
+                <div class="text-white-50 small fw-medium mt-2"><i class="bi bi-exclamation-triangle-fill text-white me-1"></i> Stock mínimo superado</div>
+                <i class="bi bi-exclamation-triangle-fill watermark-icon text-white"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. CENTRO DE NOTIFICACIONES E INCIDENCIAS -->
+<div class="card border-0 shadow-sm rounded-4 mb-5 bg-white overflow-hidden">
+    <div class="card-header bg-light bg-opacity-50 border-bottom border-light p-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <h5 class="fw-black text-dark m-0 d-flex align-items-center">
+                <i class="bi bi-bell-fill text-danger me-2 fs-4 animate__animated animate__swing animate__infinite"></i> Centro de Alertas Logísticas
+            </h5>
+            
+            <ul class="nav nav-pills nav-pills-custom" id="alertTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pausados" type="button">
+                        <i class="bi bi-pause-circle-fill text-danger me-1"></i> Trabajo Detenido
+                        {% if alertas_repuestos|length > 0 %} <span class="badge bg-danger ms-1">{{ alertas_repuestos|length }}</span> {% endif %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#retrasos" type="button">
+                        <i class="bi bi-clock-history text-warning me-1"></i> Retrasos SLA
+                        {% if alertas_retrasos|length > 0 %} <span class="badge bg-warning text-dark ms-1">{{ alertas_retrasos|length }}</span> {% endif %}
+                    </button>
+                </li>
+                {% if session.get('user_rol') in ['admin', 'cajero'] %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#stock" type="button">
+                        <i class="bi bi-boxes text-indigo me-1" style="color: #4f46e5;"></i> Stock Crítico
+                        {% if alertas_inventario|length > 0 %} <span class="badge ms-1" style="background-color: #4f46e5;">{{ alertas_inventario|length }}</span> {% endif %}
+                    </button>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+    
+    <div class="card-body p-4 bg-light bg-opacity-25">
+        <div class="tab-content">
+            
+            <!-- Tab: Vehículos Pausados -->
+            <div class="tab-pane fade show active" id="pausados" role="tabpanel">
+                <div class="row">
+                    {% for alerta in alertas_repuestos %}
+                    <div class="col-lg-6">
+                        <div class="alert-item border-danger border-opacity-25 border-start border-4">
+                            <div class="alert-icon-box bg-danger bg-opacity-10 text-danger"><i class="bi bi-wrench-adjustable"></i></div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold text-dark mb-1">Requiere: {{ alerta.repuesto_faltante }}</h6>
+                                <div class="text-muted small"><i class="bi bi-car-front-fill me-1"></i>Placa: <span class="fw-bold">{{ alerta.placa }}</span> | OT-{{ "%04d"|format(alerta.id) }}</div>
+                            </div>
+                            {% if session.get('user_rol') == 'admin' %}
+                            <form method="POST" action="/ordenes/reanudar" class="m-0">
+                                <input type="hidden" name="orden_id" value="{{ alerta.id }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger fw-bold rounded-pill" onclick="return confirm('¿Confirmas que se abasteció este repuesto?');">
+                                    <i class="bi bi-check2"></i> Abastecido
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center py-4">
+                        <i class="bi bi-check-circle-fill text-success fs-1 mb-2 d-block opacity-50"></i>
+                        <h6 class="fw-bold text-dark">Todo fluyendo correctamente</h6>
+                        <p class="text-muted small">No hay vehículos detenidos por falta de repuestos.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Tab: Retrasos -->
+            <div class="tab-pane fade" id="retrasos" role="tabpanel">
+                <div class="row">
+                    {% for retraso in alertas_retrasos %}
+                    <div class="col-lg-6">
+                        <div class="alert-item border-warning border-opacity-50 border-start border-4">
+                            <div class="alert-icon-box bg-warning bg-opacity-10 text-warning-emphasis"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold text-dark mb-1">Retraso: {{ retraso.cliente }}</h6>
+                                <div class="text-muted small">
+                                    <i class="bi bi-car-front-fill me-1"></i>{{ retraso.placa }} | 
+                                    <span class="text-danger fw-bold"><i class="bi bi-calendar-x me-1"></i>Debió entregarse: {{ retraso.fecha_promesa.strftime('%d/%m/%Y') }}</span>
+                                </div>
+                            </div>
+                            <a href="/taller/orden/{{ retraso.id }}" class="btn btn-sm btn-light border fw-bold rounded-pill">Ver Orden</a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center py-4">
+                        <i class="bi bi-emoji-sunglasses text-warning fs-1 mb-2 d-block opacity-50"></i>
+                        <h6 class="fw-bold text-dark">A tiempo</h6>
+                        <p class="text-muted small">No hay vehículos con fecha de promesa vencida en el taller.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Tab: Stock Crítico -->
+            {% if session.get('user_rol') in ['admin', 'cajero'] %}
+            <div class="tab-pane fade" id="stock" role="tabpanel">
+                <div class="row">
+                    {% for item in alertas_inventario %}
+                    <div class="col-lg-6">
+                        <div class="alert-item" style="border-left: 4px solid #4f46e5;">
+                            <div class="alert-icon-box" style="background: rgba(79, 70, 229, 0.1); color: #4f46e5;"><i class="bi bi-box-seam"></i></div>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold text-dark mb-1">{{ item.nombre }}</h6>
+                                <div class="text-muted small"><i class="bi bi-upc-scan me-1"></i>{{ item.codigo }}</div>
+                            </div>
+                            <div class="text-end pe-3 border-end">
+                                <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Stock Actual</div>
+                                <div class="fw-black fs-5 {% if item.stock_actual == 0 %}text-danger{% else %}text-warning{% endif %}">{{ item.stock_actual }}</div>
+                            </div>
+                            <div class="text-start ps-2">
+                                <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Mínimo</div>
+                                <div class="fw-bold text-dark">{{ item.stock_minimo }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center py-4">
+                        <i class="bi bi-box-seam-fill text-indigo fs-1 mb-2 d-block opacity-50" style="color: #4f46e5;"></i>
+                        <h6 class="fw-bold text-dark">Inventario Saludable</h6>
+                        <p class="text-muted small">Ningún repuesto ha caído por debajo de su stock mínimo.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if alertas_inventario|length > 0 %}
+                <div class="text-end mt-2">
+                    <a href="/inventario" class="text-decoration-none fw-bold" style="color: #4f46e5;">Ver todo el catálogo <i class="bi bi-arrow-right"></i></a>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<!-- 3. GRÁFICOS Y ACCESOS RÁPIDOS -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+            <div class="card-header bg-white border-bottom border-light p-4 d-flex flex-wrap gap-3 justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-black text-dark m-0"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Análisis de Flujo de Efectivo</h5>
+                    <small class="text-muted fw-medium">Desempeño real vs. Proyección semanal</small>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div style="height: 350px; position: relative;">
+                    <canvas id="ventasSemanalesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+            <div class="card-header bg-white border-bottom border-light p-4">
+                <h5 class="fw-black text-dark m-0"><i class="bi bi-grid-fill text-dark me-2"></i>Centro de Acción</h5>
+            </div>
+            <div class="card-body p-4 d-flex flex-column gap-3 justify-content-center">
+                <a href="/taller/nueva" class="text-decoration-none text-dark">
+                    <div class="quick-action-card p-3 d-flex align-items-center shadow-sm">
+                        <div class="icon-box bg-primary bg-opacity-10 text-primary me-3"><i class="bi bi-plus-lg"></i></div>
+                        <div>
+                            <h6 class="fw-bolder mb-1 fs-5">Aperturar Orden</h6>
+                            <span class="text-muted small fw-medium">Recepcionar nuevo vehículo</span>
+                        </div>
+                        <i class="bi bi-chevron-right fs-5 text-muted ms-auto"></i>
+                    </div>
+                </a>
+                
+                <a href="/caja" class="text-decoration-none text-dark">
+                    <div class="quick-action-card p-3 d-flex align-items-center shadow-sm">
+                        <div class="icon-box bg-success bg-opacity-10 text-success me-3"><i class="bi bi-wallet2"></i></div>
+                        <div>
+                            <h6 class="fw-bolder mb-1 fs-5">Módulo de Caja</h6>
+                            <span class="text-muted small fw-medium">Gestión de cobros y facturas</span>
+                        </div>
+                        <i class="bi bi-chevron-right fs-5 text-muted ms-auto"></i>
+                    </div>
+                </a>
+
+                <a href="/inventario" class="text-decoration-none text-dark mt-2">
+                    <div class="quick-action-card p-3 d-flex align-items-center shadow-sm" style="background: #0f172a; border: none;">
+                        <div class="icon-box bg-white bg-opacity-20 text-white me-3"><i class="bi bi-box-seam-fill"></i></div>
+                        <div>
+                            <h6 class="fw-bolder mb-1 fs-5 text-white">Inventario</h6>
+                            <span class="text-white-50 fw-medium small">Catálogo y reabastecimiento</span>
+                        </div>
+                        <i class="bi bi-chevron-right fs-5 text-white-50 ms-auto"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }} 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    $(document).ready(function() {
+        const labels = JSON.parse('{{ chart_labels | tojson | safe }}');
+        const data = JSON.parse('{{ chart_data | tojson | safe }}');
+        
+        const avg = data.reduce((a, b) => a + b, 0) / (data.length || 1);
+        const metaData = data.map(() => avg * 1.15); 
+        
+        const ctx = document.getElementById('ventasSemanalesChart').getContext('2d');
+        const gradientBar = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientBar.addColorStop(0, 'rgba(59, 130, 246, 0.9)');
+        gradientBar.addColorStop(1, 'rgba(59, 130, 246, 0.2)');
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { type: 'line', label: 'Meta', data: metaData, borderColor: '#f59e0b', borderWidth: 3, borderDash: [5, 5], tension: 0.4, pointRadius: 0, order: 1 },
+                    { type: 'bar', label: 'Ingreso', data: data, backgroundColor: gradientBar, borderRadius: 6, barPercentage: 0.6, order: 2 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { border: { display: false }, grid: { color: '#f1f5f9', borderDash: [4, 4] } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    });
+</script>
+{% endblock %}

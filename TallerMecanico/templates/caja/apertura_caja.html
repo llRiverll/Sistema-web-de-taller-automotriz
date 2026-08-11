@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Apertura de Caja - Virgen de Chapi{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 d-flex justify-content-center align-items-center" style="min-height: 80vh; animation: fadeIn 0.4s ease;">
+    
+    <div class="card border-0 shadow-lg w-100" style="max-width: 1000px; border-radius: 24px; overflow: hidden;">
+        <div class="row g-0">
+            
+            <div class="col-md-7 p-5 bg-white d-flex flex-column justify-content-center">
+                
+                <div class="mb-5">
+                    <h2 class="fw-bolder text-dark mb-1">Apertura de Caja</h2>
+                    <p class="text-muted small">Módulo Financiero y Facturación</p>
+                </div>
+
+                <form method="POST" id="formApertura" novalidate>
+                    <input type="hidden" name="monto_inicial" id="monto_real" value="0.00">
+
+                    <div class="mb-5">
+                        <label class="form-label text-muted fw-bold mb-3 small text-uppercase" style="letter-spacing: 1px;">
+                            Fondo Fijo Inicial (Sencillo)
+                        </label>
+                        
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-0 border-bottom border-primary border-3 text-primary fw-bolder fs-3 px-2 rounded-0">S/</span>
+                            <input type="text" class="form-control bg-transparent border-0 border-bottom border-primary border-3 text-start fw-bolder text-dark p-2 shadow-none money-display" id="monto_display" value="0.00" autofocus style="font-size: 3.5rem; letter-spacing: -1px; height: 80px;">
+                        </div>
+                        <div class="form-text mt-2 text-primary fw-bold"><i class="bi bi-keyboard me-1"></i> Escriba los números de corrido (Ej: para 100 soles, digite 10000)</div>
+                    </div>
+
+                    <div class="mb-5 form-floating">
+                        <input type="text" class="form-control bg-light border-0" id="observaciones" name="observaciones" placeholder="Observaciones">
+                        <label for="observaciones" class="text-muted small">Observaciones (Opcional)</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-sm py-3" id="btnAbrir" style="background: linear-gradient(135deg, #0d6efd, #0b5ed7); border: none;">
+                        <i class="bi bi-unlock-fill me-2"></i>Iniciar Turno
+                    </button>
+                </form>
+            </div>
+
+            <div class="col-md-5 p-5 text-white d-flex flex-column justify-content-center position-relative" style="background: linear-gradient(135deg, #0f172a, #1e293b);">
+                <div class="position-absolute top-0 end-0 p-4 opacity-10">
+                    <i class="bi bi-safe display-1"></i>
+                </div>
+                
+                <h4 class="fw-bolder mb-4 position-relative z-1">Resumen del Turno</h4>
+                
+                <div class="bg-white bg-opacity-10 p-3 rounded-3 mb-3 position-relative z-1 border border-light border-opacity-25">
+                    <small class="text-white-50 text-uppercase fw-bold" style="font-size: 0.7rem;">Cajero Asignado</small>
+                    <div class="fw-bold fs-5 mt-1"><i class="bi bi-person-badge me-2 text-primary"></i>{{ session['nombre'] }}</div>
+                </div>
+
+                <div class="bg-white bg-opacity-10 p-3 rounded-3 mb-4 position-relative z-1 border border-light border-opacity-25">
+                    <small class="text-white-50 text-uppercase fw-bold" style="font-size: 0.7rem;">Fecha y Hora Local</small>
+                    <div class="fw-bold fs-5 mt-1 font-monospace text-info"><i class="bi bi-clock-history me-2"></i><span id="reloj_en_vivo">00:00:00</span></div>
+                </div>
+
+                <div class="mt-auto position-relative z-1">
+                    <p class="small text-white-50 mb-0"><i class="bi bi-info-circle-fill me-1 text-primary"></i> Asegúrese de contar el dinero físico antes de registrar la apertura en el sistema.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Reloj Dinámico
+        function actualizarReloj() {
+            const ahora = new Date();
+            document.getElementById('reloj_en_vivo').textContent = ahora.toLocaleTimeString('es-PE', { hour12: false });
+        }
+        setInterval(actualizarReloj, 1000); actualizarReloj();
+
+        // LÓGICA DE INPUT TIPO CAJERO AUTOMÁTICO
+        const displayInput = document.getElementById('monto_display');
+        const hiddenInput = document.getElementById('monto_real');
+
+        displayInput.addEventListener('input', function(e) {
+            // Eliminar todo lo que no sea número
+            let rawValue = this.value.replace(/\D/g, '');
+            if (!rawValue) rawValue = '0';
+
+            // Convertir a decimal (ej: 10000 -> 100.00)
+            let floatValue = (parseInt(rawValue, 10) / 100);
+
+            // Mostrar con formato de miles y comas en la pantalla
+            this.value = floatValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            // Guardar el número limpio para Python (sin comas)
+            hiddenInput.value = floatValue.toFixed(2);
+        });
+
+        // Prevenir que el usuario borre todo y quede feo
+        displayInput.addEventListener('focus', function() {
+            if (this.value === '0.00') this.value = '';
+        });
+        displayInput.addEventListener('blur', function() {
+            if (this.value === '') {
+                this.value = '0.00';
+                hiddenInput.value = '0.00';
+            }
+        });
+
+        // Animación de envío
+        const form = document.getElementById('formApertura');
+        const btn = document.getElementById('btnAbrir');
+        form.addEventListener('submit', function(e) {
+            if (hiddenInput.value === "0.00" && !confirm("¿Está seguro de abrir la caja con S/ 0.00?")) {
+                e.preventDefault();
+                displayInput.focus();
+                return;
+            }
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Iniciando...';
+            btn.classList.add('disabled');
+        });
+    });
+</script>
+<style>
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .money-display:focus { box-shadow: none !important; outline: none !important; background-color: transparent !important; }
+</style>
+{% endblock %}
+{% endblock %}

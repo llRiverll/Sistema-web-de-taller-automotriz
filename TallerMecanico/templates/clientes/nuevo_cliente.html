@@ -1,0 +1,642 @@
+{% extends "base.html" %}
+{% block title %}Nuevo Cliente - Virgen de Chapi{% endblock %}
+{% block active_clientes %}active{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+
+<style>
+    /* ==========================================
+       ESTILOS PREMIUM Y CORRECCIÓN DE BUGS VISUALES
+       ========================================== */
+    .card-enterprise { 
+        border-radius: 16px; 
+        border: none; 
+        background-color: #ffffff; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+    }
+    
+    /* Panel lateral corporativo */
+    .sidebar-info-blue { 
+        background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%); 
+        border-radius: 16px; 
+        color: white; 
+        padding: 2.5rem 2rem; 
+        height: 100%; 
+        box-shadow: 0 4px 20px rgba(29, 78, 216, 0.3); 
+        display: flex; 
+        flex-direction: column; 
+        justify-content: space-between; 
+    }
+    
+    /* Inputs y Formularios */
+    .form-control, .form-select { 
+        border-radius: 8px; 
+        border: 2px solid #e2e8f0; 
+        padding: 0.7rem 1rem; 
+        font-size: 0.95rem; 
+        transition: all 0.3s; 
+        background-color: #f8fafc;
+    }
+
+    .form-control:focus, .form-select:focus { 
+        border-color: #3b82f6; 
+        background-color: #ffffff;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); 
+    }
+
+    .input-group-text { 
+        border-radius: 8px 0 0 8px; 
+        border: 2px solid #e2e8f0; 
+        border-right: none;
+        background-color: #ffffff; 
+        color: #64748b; 
+    }
+    
+    label { 
+        font-weight: 700; 
+        color: #475569; 
+        font-size: 0.85rem; 
+        text-transform: uppercase; 
+        letter-spacing: 0.5px; 
+        margin-bottom: 0.5rem; 
+    }
+    
+    /* ==========================================
+       CORRECCIÓN DEL FONDO BLANCO EN EL TELÉFONO
+       ========================================== */
+    .iti { 
+        width: 100%; 
+    }
+    .iti__country-list {
+        background-color: #ffffff !important; 
+        color: #0f172a !important; 
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+        border: 1px solid #cbd5e1 !important;
+        z-index: 9999 !important;
+    }
+    .iti__country {
+        padding: 10px 15px !important;
+        color: #1e293b !important;
+        transition: background-color 0.2s;
+    }
+    .iti__country:hover, .iti__country.iti__highlight {
+        background-color: #f1f5f9 !important; 
+        color: #2563eb !important; 
+    }
+    .iti__divider { 
+        border-bottom: 1px solid #e2e8f0 !important; 
+    }
+    
+    /* Botones */
+    .btn-primary-custom { 
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        border: none; 
+        border-radius: 10px; 
+        padding: 0.8rem 1.5rem; 
+        font-weight: 700; 
+        transition: all 0.3s; 
+        color: white;
+    }
+
+    .btn-primary-custom:hover { 
+        transform: translateY(-2px); 
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4); 
+        color: white;
+    }
+    
+    /* Títulos de sección */
+    .section-title { 
+        font-size: 1.1rem; 
+        font-weight: 800; 
+        color: #1e293b; 
+        margin-bottom: 1.5rem; 
+        display: flex; 
+        align-items: center; 
+        border-bottom: 2px solid #e2e8f0; 
+        padding-bottom: 0.8rem; 
+    }
+
+    .section-title i { 
+        background: #eff6ff; 
+        color: #2563eb; 
+        padding: 10px; 
+        border-radius: 10px; 
+        margin-right: 12px; 
+        font-size: 1.3rem; 
+    }
+
+    /* Alerta de Herencia de BD */
+    .alert-inheritance {
+        background: #ecfdf5; 
+        border-left: 5px solid #10b981; 
+        color: #065f46;
+        border-radius: 8px; 
+        padding: 12px 15px; 
+        font-weight: 700; 
+        font-size: 0.9rem;
+        margin-top: 10px;
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.1);
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h3 mb-1 fw-black text-dark"><i class="bi bi-person-plus-fill text-primary me-2"></i>Registrar Nuevo Cliente</h2>
+        <p class="text-muted fw-medium small mb-0">Alta de persona natural o jurídica en el sistema.</p>
+    </div>
+    <a href="/clientes" class="btn btn-light border fw-bold rounded-pill px-4 shadow-sm">
+        <i class="bi bi-arrow-left me-2"></i>Volver al Directorio
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-3 d-none d-lg-block">
+        <div class="sidebar-info-blue">
+            <div>
+                <i class="bi bi-shield-check display-4 mb-3 opacity-75"></i>
+                <h4 class="fw-bold mb-3">Sincronización Inteligente</h4>
+                <p class="small opacity-75 mb-4" style="line-height: 1.6;">
+                    El sistema consulta primero en nuestra base de datos local y luego en <strong>RENIEC / SUNAT</strong>. 
+                </p>
+                <div class="bg-white bg-opacity-10 p-3 rounded-3 mt-4 border border-white border-opacity-25">
+                    <p class="small fw-bold mb-1"><i class="bi bi-envelope-check me-2"></i>Seguridad OTP</p>
+                    <p class="small opacity-75 mb-0" style="font-size: 0.75rem;">Opcionalmente, verifique el correo del cliente enviando un código de 6 dígitos para asegurar facturación electrónica.</p>
+                </div>
+            </div>
+            <div class="small opacity-50 mt-4 fw-bold">
+                <i class="bi bi-info-circle me-1"></i> Módulo de Clientes V2.0
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-9">
+        <div class="card-enterprise p-4 p-md-5">
+            <form action="/clientes/nuevo" method="POST" id="formNuevoCliente" novalidate>
+                
+                <div class="section-title">
+                    <i class="bi bi-person-vcard"></i> 1. Identificación Oficial
+                </div>
+                
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4">
+                        <label>Tipo de Documento</label>
+                        <select class="form-select fw-bold text-primary" name="tipo_documento" id="tipo_documento" required>
+                            <option value="DNI" selected>DNI (Persona Natural)</option>
+                            <option value="RUC">RUC (Empresa / Negocio)</option>
+                            <option value="CE">Carnet de Extranjería</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <label>Número de Documento <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-upc-scan"></i></span>
+                            <input type="text" class="form-control fw-bold fs-5 text-dark" id="numero_documento" name="numero_documento" placeholder="8 dígitos numéricos" required>
+                            <button class="btn btn-dark fw-bold px-4" type="button" id="btnBuscarDoc">
+                                <i class="bi bi-search me-1"></i> Consultar
+                            </button>
+                        </div>
+                        <div class="invalid-feedback fw-bold mt-2" id="doc_error">Error en el documento.</div>
+                        
+                        <div id="alertaHerencia"></div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label id="lbl_nombre">Nombre Completo / Razón Social <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-light fs-5 fw-bold text-dark" id="nombre_completo" name="nombre_completo" required readonly placeholder="El sistema lo autocompletará...">
+                    </div>
+                </div>
+
+                <div class="section-title mt-4">
+                    <i class="bi bi-geo-alt-fill"></i> 2. Ubicación y Contacto
+                </div>
+
+                <div class="row g-4 mb-5">
+                    
+                    <div class="col-md-6">
+                        <label>Teléfono / Celular <span class="text-danger">*</span></label>
+                        <div>
+                            <input type="tel" class="form-control fw-bold" id="telefono" name="telefono" required>
+                        </div>
+                        <div class="invalid-feedback" id="tel_error">Número de teléfono inválido.</div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label>Correo Electrónico (Opcional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control text-lowercase fw-bold" id="email" name="email" placeholder="cliente@empresa.com">
+                            <button class="btn btn-outline-primary fw-bold" type="button" id="btnEnviarCodigo" disabled>
+                                Validar
+                            </button>
+                        </div>
+                        <div id="emailStatus" class="small mt-2 text-muted fw-bold">Verificación pendiente (Recomendado).</div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label>Dirección Física / Calle <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-house-door"></i></span>
+                            <input type="text" class="form-control text-uppercase fw-bold" id="direccion" name="direccion" placeholder="Ej: Av. Los Incas 123" required>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Departamento</label>
+                        <select class="form-select fw-bold" id="departamento" name="departamento">
+                            <option value="">Seleccione...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label>Provincia</label>
+                        <select class="form-select fw-bold" id="provincia" name="provincia" disabled>
+                            <option value="">Seleccione...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label>Distrito</label>
+                        <select class="form-select fw-bold" id="distrito" name="distrito" disabled>
+                            <option value="">Seleccione...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end border-top pt-4 mt-2">
+                    <button type="submit" class="btn btn-primary-custom btn-lg w-100 w-md-auto shadow" id="btnGuardar">
+                        <i class="bi bi-save me-2"></i>Registrar Cliente en Base de Datos
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalOTP" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center px-5 pb-5">
+                <div class="mb-4">
+                    <i class="bi bi-shield-lock-fill display-1 text-primary opacity-75"></i>
+                </div>
+                <h4 class="fw-black text-dark mb-3">Verificación de Seguridad</h4>
+                <p class="text-muted mb-4">Hemos enviado un código de 6 dígitos al correo: <br><strong class="text-dark fs-6" id="txtCorreoDestino"></strong></p>
+                
+                <div class="d-flex justify-content-center mb-2">
+                    <input type="text" class="form-control form-control-lg text-center fw-bold fs-3" id="otpCode" placeholder="000000" maxlength="6" style="letter-spacing: 10px; max-width: 250px; border: 2px solid #cbd5e1;">
+                </div>
+                <div class="text-danger small fw-bold mb-4 d-none" id="otpErrorMsg">El código ingresado es incorrecto.</div>
+
+                <div class="d-grid gap-3 mt-4">
+                    <button type="button" class="btn btn-primary btn-lg fw-bold rounded-pill shadow" id="btnVerificarOTP">Verificar Código</button>
+                    <button type="button" class="btn btn-light fw-bold rounded-pill text-muted border" id="btnCancelarOTP">Omitir por ahora</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // ========================================================
+        // 1. INICIALIZAR INTL-TEL-INPUT (TELÉFONO)
+        // ========================================================
+        const inputTel = document.getElementById("telefono");
+        const iti = window.intlTelInput(inputTel, {
+            initialCountry: "pe",
+            preferredCountries: ["pe", "co", "ve", "ec", "cl"],
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+            separateDialCode: true,
+        });
+
+        // 2. RECIBIMOS LA DATA GIGANTE DESDE PYTHON (1 SOLA LÍNEA)
+        const ubigeoData = JSON.parse('{{ ubigeo_data | safe }}');
+
+        const selectDep = document.getElementById("departamento");
+        const selectProv = document.getElementById("provincia");
+        const selectDist = document.getElementById("distrito");
+
+        // Llenar Departamentos al inicio
+        for (let dep in ubigeoData) {
+            selectDep.add(new Option(dep, dep));
+        }
+
+        // Lógica en cascada al cambiar Departamento
+        selectDep.addEventListener("change", function() {
+            selectProv.innerHTML = '<option value="">Seleccione...</option>';
+            selectDist.innerHTML = '<option value="">Seleccione...</option>';
+            selectDist.disabled = true;
+
+            if (this.value) {
+                selectProv.disabled = false;
+                for (let prov in ubigeoData[this.value]) {
+                    selectProv.add(new Option(prov, prov));
+                }
+            } else {
+                selectProv.disabled = true;
+            }
+        });
+
+        // Lógica en cascada al cambiar Provincia
+        selectProv.addEventListener("change", function() {
+            selectDist.innerHTML = '<option value="">Seleccione...</option>';
+            if (this.value) {
+                selectDist.disabled = false;
+                let distritos = ubigeoData[selectDep.value][this.value];
+                distritos.forEach(dist => selectDist.add(new Option(dist, dist)));
+            } else {
+                selectDist.disabled = true;
+            }
+        });
+
+
+        // ========================================================
+        // 3. RESTRICCIÓN FÍSICA ESTRICTA DE DOCUMENTO
+        // ========================================================
+        const tipoDoc = document.getElementById('tipo_documento');
+        const numDoc = document.getElementById('numero_documento');
+        const docError = document.getElementById('doc_error');
+        
+        function restringirDocumento() {
+            let valor = numDoc.value;
+            if (tipoDoc.value === 'DNI') {
+                numDoc.value = valor.replace(/\D/g, '').substring(0, 8);
+                if (numDoc.value.length > 0 && numDoc.value.length < 8) {
+                    numDoc.classList.add('is-invalid'); docError.innerText = "El DNI requiere 8 dígitos."; docError.style.display = 'block';
+                } else {
+                    numDoc.classList.remove('is-invalid'); docError.style.display = 'none';
+                }
+            } else if (tipoDoc.value === 'RUC') {
+                numDoc.value = valor.replace(/\D/g, '').substring(0, 11);
+                if (numDoc.value.length > 0 && numDoc.value.length < 11) {
+                    numDoc.classList.add('is-invalid'); docError.innerText = "El RUC requiere 11 dígitos."; docError.style.display = 'block';
+                } else {
+                    numDoc.classList.remove('is-invalid'); docError.style.display = 'none';
+                }
+            } else {
+                numDoc.value = valor.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().substring(0, 12);
+                numDoc.classList.remove('is-invalid'); docError.style.display = 'none';
+            }
+        }
+
+        tipoDoc.addEventListener('change', function() {
+            numDoc.value = "";
+            numDoc.classList.remove("is-valid", "is-invalid");
+            docError.style.display = 'none';
+            document.getElementById('alertaHerencia').innerHTML = '';
+            document.getElementById('nombre_completo').value = '';
+
+            if(this.value === 'DNI') { 
+                numDoc.placeholder = "8 dígitos numéricos"; 
+                document.getElementById('lbl_nombre').innerHTML = 'Nombres Completos <span class="text-danger">*</span>'; 
+            } else if(this.value === 'RUC') { 
+                numDoc.placeholder = "11 dígitos (10 o 20)"; 
+                document.getElementById('lbl_nombre').innerHTML = 'Razón Social <span class="text-danger">*</span>'; 
+            } else { 
+                numDoc.placeholder = "9 a 12 caracteres"; 
+                document.getElementById('lbl_nombre').innerHTML = 'Nombre Completo <span class="text-danger">*</span>'; 
+            }
+        });
+
+        numDoc.addEventListener('input', restringirDocumento);
+
+        // ========================================================
+        // 4. BUSCADOR INTELIGENTE (LA MAGIA DE HERENCIA)
+        // ========================================================
+        const btnBuscarDoc = document.getElementById('btnBuscarDoc');
+        btnBuscarDoc.addEventListener('click', function() {
+            const tipo = tipoDoc.value;
+            const numero = numDoc.value.trim();
+
+            if (!numero) {
+                alert("Por favor, ingrese un número de documento primero.");
+                numDoc.focus();
+                return;
+            }
+
+            // Cambiar botón a estado de carga
+            const originalText = btnBuscarDoc.innerHTML;
+            btnBuscarDoc.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Consultando...';
+            btnBuscarDoc.disabled = true;
+
+            // Limpiar alerta y campos anteriores
+            document.getElementById('alertaHerencia').innerHTML = '';
+            document.getElementById('nombre_completo').classList.remove('is-valid');
+
+            fetch('/api/consultar_documento', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tipo: tipo, numero: numero })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    
+                    document.getElementById('nombre_completo').value = data.nombre;
+                    document.getElementById('nombre_completo').classList.add('is-valid');
+
+                    // ==============================================
+                    // SI VIENE DE LA BASE DE DATOS LOCAL (HERENCIA)
+                    // ==============================================
+                    if (data.origen === 'local') {
+                        // 1. Mostrar alerta visual moderna
+                        document.getElementById('alertaHerencia').innerHTML = `
+                            <div class="alert-inheritance animate__animated animate__fadeInDown">
+                                <i class="bi bi-stars me-2 fs-5"></i> ¡Persona encontrada en el sistema! Datos precargados.
+                            </div>
+                        `;
+
+                        // 2. Rellenar campos existentes
+                        if (data.correo) {
+                            const emailInput = document.getElementById('email');
+                            emailInput.value = data.correo;
+                            document.getElementById('emailStatus').innerText = "Correo verificado internamente.";
+                            document.getElementById('emailStatus').className = "small mt-2 text-success fw-bold";
+                            document.getElementById('btnEnviarCodigo').disabled = true;
+                        }
+                        if (data.telefono) {
+                            iti.setNumber("+51" + data.telefono.replace("+51", "")); 
+                        }
+                        if (data.direccion) {
+                            document.getElementById('direccion').value = data.direccion;
+                        }
+
+                        // ==============================================
+                        // 3. INYECCIÓN DIRECTA DESDE LA API (CÓDIGO LIMPIO)
+                        // ==============================================
+                        if (data.departamento) {
+                            // Fabricamos las opciones exactas que nos dio RENIEC/SUNAT y las dejamos seleccionadas
+                            document.getElementById("departamento").innerHTML = `<option value="${data.departamento}" selected>${data.departamento}</option>`;
+                            document.getElementById("provincia").innerHTML = `<option value="${data.provincia}" selected>${data.provincia}</option>`;
+                            document.getElementById("distrito").innerHTML = `<option value="${data.distrito}" selected>${data.distrito}</option>`;
+                        }
+
+                    } else {
+                        // Si viene de RENIEC, vaciamos lo demás
+                        document.getElementById('email').value = "";
+                        iti.setNumber("");
+                        document.getElementById('direccion').value = "";
+                        selectDep.value = "";
+                        selectProv.innerHTML = '<option value="">Seleccione...</option>';
+                        selectProv.disabled = true;
+                        selectDist.innerHTML = '<option value="">Seleccione...</option>';
+                        selectDist.disabled = true;
+
+                        document.getElementById('emailStatus').innerText = "Verificación pendiente (Recomendado).";
+                        document.getElementById('emailStatus').className = "small mt-2 text-muted fw-bold";
+                        document.getElementById('btnEnviarCodigo').disabled = false;
+                    }
+                } else {
+                    alert(data.error || "Documento no encontrado.");
+                    document.getElementById('nombre_completo').value = '';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Ocurrió un error en la conexión con el servidor.");
+            })
+            .finally(() => {
+                btnBuscarDoc.innerHTML = originalText;
+                btnBuscarDoc.disabled = false;
+            });
+        });
+
+        // ========================================================
+        // 5. DESBLOQUEO DE CAMPOS AL ENVIAR FORMULARIO (Evitar NULL)
+        // ========================================================
+        document.getElementById("formNuevoCliente").addEventListener("submit", function(e) {
+            // Le quitamos el 'disabled' a provincia y distrito un milisegundo antes de enviar
+            selectProv.disabled = false;
+            selectDist.disabled = false;
+        });
+
+        // ========================================================
+        // 6. LÓGICA DE VALIDACIÓN DE CORREO (OTP)
+        // ========================================================
+        const emailInput = document.getElementById('email');
+        const btnEnviarCodigo = document.getElementById('btnEnviarCodigo');
+        const emailStatus = document.getElementById('emailStatus');
+        
+        emailInput.addEventListener('input', function() {
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (regex.test(this.value)) {
+                btnEnviarCodigo.disabled = false;
+                emailStatus.innerText = "Formato correcto. Proceda a validar.";
+                emailStatus.className = "small mt-2 text-primary fw-bold";
+            } else {
+                btnEnviarCodigo.disabled = true;
+                emailStatus.innerText = "Verificación pendiente (Recomendado).";
+                emailStatus.className = "small mt-2 text-muted fw-bold";
+            }
+        });
+
+        const modalOTP = new bootstrap.Modal(document.getElementById('modalOTP'));
+        const otpInputCode = document.getElementById('otpCode');
+        const btnVerificarOTP = document.getElementById('btnVerificarOTP');
+        const btnCancelarOTP = document.getElementById('btnCancelarOTP');
+        const otpErrorMsg = document.getElementById('otpErrorMsg');
+
+        // Enviar OTP
+        btnEnviarCodigo.addEventListener('click', function() {
+            const correo = emailInput.value.trim();
+            if(!correo) return;
+
+            btnEnviarCodigo.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            btnEnviarCodigo.disabled = true;
+
+            // IMPORTANTE: Aquí cambié la ruta para que coincida con tu app.py
+            fetch('/api/enviar_codigo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: correo })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    document.getElementById('txtCorreoDestino').innerText = correo;
+                    otpInputCode.value = "";
+                    otpErrorMsg.classList.add('d-none');
+                    modalOTP.show();
+                    
+                    document.getElementById('modalOTP').addEventListener('shown.bs.modal', () => {
+                        otpInputCode.focus();
+                    }, { once: true });
+                } else {
+                    alert(data.error || "Error al enviar el código.");
+                    btnEnviarCodigo.innerHTML = 'Validar';
+                    btnEnviarCodigo.disabled = false;
+                }
+            })
+            .catch(err => {
+                alert("Error de conexión.");
+                btnEnviarCodigo.innerHTML = 'Validar';
+                btnEnviarCodigo.disabled = false;
+            });
+        });
+
+        // Verificar OTP
+        btnVerificarOTP.addEventListener('click', function() {
+            const codigo = otpInputCode.value.trim();
+            if(codigo.length !== 4) { // Según tu app.py, el código OTP es de 4 dígitos (1000 a 9999)
+                otpErrorMsg.innerText = "Ingrese los 4 dígitos completos.";
+                otpErrorMsg.classList.remove('d-none');
+                return;
+            }
+
+            btnVerificarOTP.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            btnVerificarOTP.disabled = true;
+
+            // IMPORTANTE: Aquí también corregí la ruta para tu app.py
+            fetch('/api/verificar_codigo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: emailInput.value.trim(), codigo: codigo })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    modalOTP.hide();
+                    btnEnviarCodigo.className = "btn btn-success fw-bold disabled";
+                    btnEnviarCodigo.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Verificado';
+                    emailInput.readOnly = true; 
+                    emailStatus.className = "small mt-2 text-success fw-bold";
+                    emailStatus.innerText = "Correo real verificado exitosamente.";
+                } else {
+                    otpErrorMsg.innerText = "El código es incorrecto o ha expirado.";
+                    otpErrorMsg.classList.remove('d-none');
+                    otpInputCode.value = "";
+                    otpInputCode.focus();
+                }
+            })
+            .catch(err => {
+                otpErrorMsg.innerText = "Error de conexión.";
+                otpErrorMsg.classList.remove('d-none');
+            })
+            .finally(() => {
+                btnVerificarOTP.disabled = false;
+                btnVerificarOTP.innerText = "Verificar Código";
+            });
+        });
+
+        btnCancelarOTP.addEventListener("click", function() {
+            modalOTP.hide();
+            btnEnviarCodigo.disabled = false;
+            btnEnviarCodigo.className = "btn btn-outline-primary fw-bold";
+            btnEnviarCodigo.innerText = "Validar";
+            emailStatus.innerText = "Verificación cancelada.";
+            emailStatus.className = "small mt-2 text-danger fw-bold";
+        });
+
+    });
+</script>
+{% endblock %}

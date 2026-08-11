@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Nuevo Proveedor - Virgen de Chapi{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+
+<style>
+    .card-enterprise { border-radius: 16px; border: none; background-color: #ffffff; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+    .sidebar-info-purple { background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 100%); border-radius: 16px; color: white; padding: 2.5rem 2rem; height: 100%; box-shadow: 0 4px 20px rgba(109, 40, 217, 0.3); display: flex; flex-direction: column; justify-content: space-between; }
+    .form-control, .form-select { border-radius: 8px; border: 2px solid #e2e8f0; padding: 0.7rem 1rem; font-size: 0.95rem; background-color: #f8fafc; }
+    .input-group-text { border-radius: 8px 0 0 8px; border: 2px solid #e2e8f0; border-right: none; background-color: #ffffff; color: #64748b; }
+    label { font-weight: 700; color: #475569; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .btn-primary-custom { background: linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%); border: none; border-radius: 10px; padding: 0.8rem 1.5rem; font-weight: 700; color: white; }
+    .section-title { font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-bottom: 1.5rem; display: flex; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.8rem; }
+    .section-title i { background: #f3e8ff; color: #6d28d9; padding: 10px; border-radius: 10px; margin-right: 12px; font-size: 1.3rem; }
+    .alert-inheritance { background: #ecfdf5; border-left: 5px solid #10b981; color: #065f46; border-radius: 8px; padding: 12px 15px; font-weight: 700; margin-top: 10px; }
+    .iti { width: 100%; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h3 mb-1 fw-black text-dark"><i class="bi bi-truck text-purple me-2"></i>Registrar Proveedor</h2>
+        <p class="text-muted fw-medium small mb-0">Alta de empresas que suministran repuestos al taller.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-3 d-none d-lg-block">
+        <div class="sidebar-info-purple">
+            <div>
+                <i class="bi bi-box-seam display-4 mb-3 opacity-75"></i>
+                <h4 class="fw-bold mb-3">Gestión de Stock</h4>
+                <p class="small opacity-75 mb-4" style="line-height: 1.6;">
+                    Al registrar el <strong>RUC</strong> del proveedor, el sistema autocompletará la razón social desde la SUNAT.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-9">
+        <div class="card-enterprise p-4 p-md-5">
+            <form action="/proveedores/nuevo" method="POST" id="formProveedor">
+                
+                <div class="section-title">
+                    <i class="bi bi-building"></i> 1. Datos de la Empresa
+                </div>
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <label>Documento</label>
+                        <select class="form-select fw-bold text-dark" name="tipo_documento" id="tipo_documento">
+                            <option value="RUC" selected>RUC</option>
+                            <option value="DNI">DNI (Persona Natural con Negocio)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label>Número de RUC / DNI <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-upc-scan"></i></span>
+                            <input type="text" class="form-control fw-bold fs-5" id="numero_documento" name="numero_documento" required>
+                            <button class="btn btn-dark fw-bold px-4" type="button" id="btnBuscarDoc">Consultar</button>
+                        </div>
+                        <div id="alertaHerencia"></div>
+                    </div>
+                    <div class="col-md-12">
+                        <label>Razón Social <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-light fs-5 fw-bold" id="nombre_completo" name="nombre_completo" required readonly>
+                    </div>
+                    <div class="col-md-12">
+                        <label>Dirección Fiscal <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control text-uppercase fw-bold" id="direccion" name="direccion" required>
+                    </div>
+                </div>
+
+                <div class="section-title mt-5">
+                    <i class="bi bi-telephone"></i> 2. Información de Contacto
+                </div>
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <label>Nombre del Asesor/Vendedor (Opcional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                            <input type="text" class="form-control fw-bold" id="nombre_contacto" name="nombre_contacto" placeholder="Ej: Carlos Ventas">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Teléfono de Ventas <span class="text-danger">*</span></label>
+                        <div><input type="tel" class="form-control fw-bold" id="telefono" name="telefono" required></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Correo Electrónico (Para Cotizaciones)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control text-lowercase fw-bold" id="email" name="email">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Sitio Web (Opcional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-globe"></i></span>
+                            <input type="text" class="form-control fw-bold" id="sitio_web" name="sitio_web" placeholder="www.repuestos.com">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end border-top pt-4 mt-2">
+                    <button type="submit" class="btn btn-primary-custom btn-lg shadow">
+                        <i class="bi bi-save me-2"></i>Guardar Proveedor
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Inicializar Teléfono
+        const inputTel = document.getElementById("telefono");
+        const iti = window.intlTelInput(inputTel, {
+            initialCountry: "pe",
+            preferredCountries: ["pe"],
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+            separateDialCode: true,
+        });
+
+        // Buscador Inteligente SUNAT/RENIEC (Reutilizado)
+        const btnBuscarDoc = document.getElementById('btnBuscarDoc');
+        btnBuscarDoc.addEventListener('click', function() {
+            const tipo = document.getElementById('tipo_documento').value;
+            const numero = document.getElementById('numero_documento').value.trim();
+            if (!numero) return;
+
+            btnBuscarDoc.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            btnBuscarDoc.disabled = true;
+
+            fetch('/api/consultar_documento', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tipo: tipo, numero: numero })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('nombre_completo').value = data.nombre;
+                    if (data.origen === 'local') {
+                        document.getElementById('alertaHerencia').innerHTML = `<div class="alert-inheritance"><i class="bi bi-stars me-2 fs-5"></i> ¡Empresa encontrada en BD! Datos precargados.</div>`;
+                        if (data.correo) document.getElementById('email').value = data.correo;
+                        if (data.telefono) iti.setNumber("+51" + data.telefono.replace("+51", "")); 
+                        if (data.direccion) document.getElementById('direccion').value = data.direccion;
+                    } else {
+                        document.getElementById('alertaHerencia').innerHTML = '';
+                        document.getElementById('email').value = "";
+                        iti.setNumber("");
+                        document.getElementById('direccion').value = "";
+                    }
+                } else {
+                    alert("No encontrado en SUNAT/RENIEC.");
+                }
+            })
+            .finally(() => {
+                btnBuscarDoc.innerHTML = 'Consultar';
+                btnBuscarDoc.disabled = false;
+            });
+        });
+    });
+</script>
+{% endblock %}

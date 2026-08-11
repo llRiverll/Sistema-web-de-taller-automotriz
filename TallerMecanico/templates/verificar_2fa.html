@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Verificación de Seguridad - Virgen de Chapi{% endblock %}
+
+{% block content %}
+<style>
+    .auth-card {
+        max-width: 450px;
+        margin: 50px auto;
+        border-radius: 20px;
+        border: none;
+        overflow: hidden;
+    }
+    .otp-input {
+        letter-spacing: 12px;
+        font-size: 2rem;
+        font-weight: bold;
+        text-align: center;
+        border: 2px solid #dee2e6;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    .otp-input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        background-color: #f8f9fa;
+    }
+    .auth-icon {
+        background: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+    }
+</style>
+
+<div class="container">
+    <div class="card auth-card shadow-lg animate__animated animate__fadeIn">
+        <div class="card-body p-5">
+            <div class="text-center">
+                <div class="auth-icon">
+                    <i class="bi bi-shield-lock-fill fs-1"></i>
+                </div>
+                <h3 class="fw-bold text-dark mb-2">Verificación de Seguridad</h3>
+                <p class="text-muted small px-3">
+                    Hemos enviado un código de 6 dígitos a tu correo electrónico. Por favor, ingrésalo para continuar.
+                </p>
+            </div>
+
+            <form method="POST" class="mt-4">
+                <div class="mb-4">
+                    <label class="form-label d-block text-center fw-bold text-dark small text-uppercase mb-3">
+                        Código de Acceso (OTP)
+                    </label>
+                    <input type="text" 
+                           name="codigo_2fa" 
+                           class="form-control otp-input" 
+                           placeholder="000000" 
+                           pattern="\d{6}" 
+                           maxlength="6" 
+                           required 
+                           autofocus 
+                           autocomplete="one-time-code">
+                </div>
+
+                <div class="form-check mb-4 mt-3 text-start bg-light p-3 rounded-3 border">
+                    <input class="form-check-input ms-0 me-2" 
+                           type="checkbox" 
+                           name="recordar_dispositivo" 
+                           id="recordar_dispositivo" 
+                           value="si" 
+                           checked>
+                    <label class="form-check-label small text-dark fw-bold" for="recordar_dispositivo">
+                        Confiar en este dispositivo por 30 días
+                    </label>
+                    <div class="form-text mt-1 ms-4" style="font-size: 0.75rem;">
+                        No volveremos a pedirte el código en este navegador mientras la sesión sea válida.
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-sm py-3 rounded-3">
+                        Verificar e Ingresar <i class="bi bi-arrow-right-short ms-1"></i>
+                    </button>
+                    <a href="/logout" class="btn btn-link btn-sm text-decoration-none text-muted mt-2">
+                        <i class="bi bi-x-circle me-1"></i> Cancelar inicio de sesión
+                    </a>
+                </div>
+            </form>
+        </div>
+        
+        <div class="card-footer bg-light border-0 py-3 text-center">
+            <span class="text-muted small">
+                ¿No recibiste el código? <br>
+                <strong class="text-primary">Revisa tu carpeta de Spam</strong>
+            </span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Pequeño script para asegurar que solo se ingresen números
+    document.querySelector('.otp-input').addEventListener('input', function (e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+</script>
+{% endblock %}

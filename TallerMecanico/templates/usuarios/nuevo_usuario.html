@@ -1,0 +1,660 @@
+{% extends "base.html" %}
+{% block title %}Nuevo Trabajador - Virgen de Chapi{% endblock %}
+{% block active_usuarios %}active{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0 fw-bolder text-dark"><i class="bi bi-person-badge-fill text-primary me-2"></i>Alta de Personal (Módulo Gerencial)</h2>
+    <a href="/usuarios" class="btn btn-light shadow-sm fw-bold rounded-pill px-4 border hover-shadow">
+        <i class="bi bi-arrow-left me-2"></i>Cancelar
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-3 d-none d-lg-block">
+        <div class="card border-0 shadow-sm rounded-4 h-100 position-sticky" style="top: 20px; background: linear-gradient(145deg, #1e293b, #0f172a); color: white;">
+            <div class="card-body p-4 d-flex flex-column text-center">
+                <i class="bi bi-shield-lock-fill display-3 text-success mb-3 mt-4"></i>
+                <h4 class="fw-bold mb-3">Acceso Restringido</h4>
+                <p class="text-white-50 small mb-4">
+                    La información de planillas, sueldos y cuentas bancarias es estrictamente confidencial. Solo la cuenta de Administrador tiene acceso a este panel.
+                </p>
+                <div class="mt-auto p-3 bg-white bg-opacity-10 rounded-3 text-start border border-secondary border-opacity-25">
+                    <p class="small text-white-50 m-0"><i class="bi bi-graph-up-arrow text-warning me-1"></i> <strong>Sueldo Analítico:</strong> El sistema bloquea los bonos por exp. en cargos de nivel de entrada.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-9">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4 p-md-5">
+                <form method="POST" id="formNuevoUsuario" novalidate>
+                    
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-4"><i class="bi bi-1-circle-fill text-primary me-2"></i>Identidad</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Documento</label>
+                            <select name="tipo_documento" id="tipo_documento" class="form-select bg-light fw-bold text-primary">
+                                <option value="DNI" selected>DNI</option>
+                                <option value="CE">Carnet Ext.</option>
+                                <option value="PAS">Pasaporte</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold small text-muted text-uppercase">N° de Documento <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control fw-bold text-uppercase" name="numero_documento" id="numero_documento" required placeholder="8 dígitos numéricos">
+                                <button class="btn btn-primary fw-bold px-3" type="button" id="btnBuscarDni" title="Buscar en RENIEC">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback fw-bold" id="doc_error">Debe tener 8 números.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Fecha Nacimiento</label>
+                            <input type="text" class="form-control bg-white" name="fecha_nacimiento" id="fecha_nacimiento" placeholder="Seleccione fecha...">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Nombres <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control text-uppercase" name="nombres" id="input_nombres" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Apellido Paterno <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control text-uppercase" name="ap_paterno" id="input_paterno" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Apellido Materno <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control text-uppercase" name="ap_materno" id="input_materno" required>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-4 mt-5"><i class="bi bi-pin-map-fill text-warning me-2"></i>Contacto y Domicilio</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Correo Electrónico <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-envelope-at"></i></span>
+                                <input type="email" class="form-control text-lowercase" name="email" id="input_email" required placeholder="ejemplo@correo.com">
+                                <div class="invalid-feedback fw-bold">Por favor, ingrese un correo válido (ej: usuario@dominio.com).</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Celular (Local/Extranjero) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <select name="cod_pais" id="cod_pais" class="form-select bg-light" style="max-width: 100px; font-weight: bold;">
+                                    <option value="+51" selected>🇵🇪 +51</option>
+                                    <option value="+58">🇻🇪 +58</option>
+                                    <option value="+57">🇨🇴 +57</option>
+                                </select>
+                                <input type="text" class="form-control" name="telefono" id="input_telefono" required placeholder="9 números (Perú)">
+                                <div class="invalid-feedback fw-bold" id="tel_error">Complete los números.</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Departamento</label>
+                            <select name="departamento" id="sel_departamento" class="form-select text-uppercase"><option value="">Seleccione...</option></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Provincia</label>
+                            <select name="provincia" id="sel_provincia" class="form-select text-uppercase" disabled><option value="">Seleccione...</option></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Distrito</label>
+                            <select name="distrito" id="sel_distrito" class="form-select text-uppercase" disabled><option value="">Seleccione...</option></select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Dirección Exacta</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-house"></i></span>
+                                <input type="text" class="form-control text-uppercase" name="direccion">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Referencia</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-geo-alt"></i></span>
+                                <input type="text" class="form-control text-uppercase" name="referencia" placeholder="Ej: FRENTE AL GRIFO">
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-4 mt-5"><i class="bi bi-2-circle-fill text-danger me-2"></i>Perfil Médico y Seguridad (SST)</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Tipo Sangre</label>
+                            <select name="tipo_sangre" class="form-select bg-light fw-bold text-danger">
+                                <option value="No Especifica">No Especifica</option><option value="O+">O+</option><option value="O-">O-</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="AB+">AB+</option>
+                            </select>
+                        </div>
+                        <div class="col-md-9">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Condiciones Médicas o Alergias (Múltiple)</label>
+                            <select class="form-select" id="sel_condiciones_medicas" name="condiciones_medicas[]" multiple="multiple" style="width: 100%;">
+                                <option value="NINGUNA (SANO)">NINGUNA (SANO)</option>
+                                <option value="ALERGIA A LA PENICILINA">ALERGIA A LA PENICILINA</option>
+                                <option value="ALERGIA A AINES (IBUPROFENO/ASPIRINA)">ALERGIA A AINES (IBUPROFENO/ASPIRINA)</option>
+                                <option value="ALERGIA AL LATEX">ALERGIA AL LATEX</option>
+                                <option value="ASMA BRONQUIAL">ASMA BRONQUIAL</option>
+                                <option value="DIABETES TIPO 1">DIABETES TIPO 1</option>
+                                <option value="DIABETES TIPO 2">DIABETES TIPO 2</option>
+                                <option value="HIPERTENSIÓN ARTERIAL">HIPERTENSIÓN ARTERIAL</option>
+                                <option value="EPILEPSIA / CONVULSIONES">EPILEPSIA / CONVULSIONES</option>
+                                <option value="ENFERMEDAD CARDIACA">ENFERMEDAD CARDIACA</option>
+                                <option value="HIPOTIROIDISMO">HIPOTIROIDISMO</option>
+                            </select>
+                            <small class="text-muted"><i class="bi bi-info-circle"></i> Use el buscador para seleccionar varias condiciones. Si no existe, escríbala y presione <strong>Enter</strong>.</small>
+                        </div>
+                        
+                        <div class="col-md-7 mt-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Familiar para Emergencias <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control border-danger text-uppercase" name="em_nombre" required placeholder="Nombre y parentesco">
+                        </div>
+                        
+                        <div class="col-md-5 mt-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Celular de Emergencia <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control border-danger" name="em_telefono" id="em_telefono" required placeholder="9 números exactos" maxlength="9">
+                            <div class="invalid-feedback fw-bold">El celular debe tener 9 dígitos exactos.</div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-4 mt-5"><i class="bi bi-3-circle-fill text-success me-2"></i>Datos Laborales y Planilla</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Cargo / Puesto <span class="text-danger">*</span></label>
+                            <select name="nivel_cargo" id="sel_cargo" class="form-select bg-light fw-bold text-primary" required>
+                                <option value="">Seleccione cargo...</option>
+                                <option value="Practicante de Mecánica">Practicante de Mecánica</option>
+                                <option value="Recepcionista">Recepcionista / Administrativo</option>
+                                <option value="Mecánico Técnico">Mecánico Técnico</option>
+                                <option value="Electricista Automotriz">Electricista Automotriz</option>
+                                <option value="Mecánico Principal (Maestro)">Mecánico Principal (Maestro)</option>
+                                <option value="Administrador">Administrador / Dueño</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Área Asignada <span class="text-danger">*</span></label>
+                            <select name="especialidad_area" id="sel_area" class="form-select bg-light" required disabled>
+                                <option value="">Primero elija un cargo...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Años de Exp. <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control fw-bold text-center border-success" name="experiencia" id="input_experiencia" value="0" min="0" required>
+                        </div>
+
+                        <div class="col-md-4 mt-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Sueldo Base (S/)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-success bg-opacity-10 text-success fw-bold">S/</span>
+                                <input type="number" step="0.01" min="0" class="form-control fw-bold" name="sueldo_base" id="input_sueldo" required>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-5 mt-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Banco y Cuenta</label>
+                            <div class="input-group">
+                                <select name="banco" class="form-select fw-bold bg-light" style="max-width: 110px;">
+                                    <option value="BCP" style="color: #0043ce;">BCP</option>
+                                    <option value="BBVA" style="color: #004481;">BBVA</option>
+                                    <option value="IBK" style="color: #00a443;">IBK</option>
+                                    <option value="SCOTIA" style="color: #df0614;">SCOTIA</option>
+                                    <option value="NACION">NACIÓN</option>
+                                    <option value="OTRO">OTRO</option>
+                                </select>
+                                <input type="text" class="form-control font-monospace fw-bold text-primary" name="cuenta_bancaria" id="input_cuenta" placeholder="XXXX XXXX XXXX XXXX" maxlength="24">
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mt-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Fecha de Ingreso</label>
+                            <input type="text" class="form-control bg-white" name="fecha_ingreso" id="fecha_ingreso" required placeholder="Seleccione fecha...">
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-4 mt-5"><i class="bi bi-4-circle-fill text-info me-2"></i>Credenciales y Permisos del Sistema</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Usuario <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control font-monospace text-lowercase border-info" name="usuario" id="input_usuario" required>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Rol <span class="text-danger">*</span></label>
+                            <select id="sel_rol_visual" class="form-select bg-secondary bg-opacity-10 fw-bold text-muted px-2" style="pointer-events: none;" tabindex="-1">
+                                <option value="">Auto...</option>
+                                <option value="mecanico">Mecánico</option>
+                                <option value="cajero">Cajero</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            <input type="hidden" name="rol" id="input_rol_oculto" required>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Clave <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" name="password" id="input_password" placeholder="Clave" required>
+                                <button class="btn border-top border-bottom border-end bg-light px-2" type="button" onclick="toggleVis('input_password', 'eye_1')">
+                                    <i class="bi bi-eye-slash-fill text-muted" id="eye_1"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">Confirmar <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="input_password_confirm" placeholder="Repita" required>
+                                <button class="btn border-top border-bottom border-end bg-light px-2" type="button" onclick="toggleVis('input_password_confirm', 'eye_2')">
+                                    <i class="bi bi-eye-slash-fill text-muted" id="eye_2"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 offset-md-6 mt-1">
+                            <div class="progress mt-1 mb-2" style="height: 6px;">
+                                <div id="barra-seguridad" class="progress-bar bg-danger" role="progressbar" style="width: 0%; transition: width 0.4s ease;"></div>
+                            </div>
+                            <ul class="list-unstyled req-list text-muted fw-bold mb-0" style="font-size: 0.7rem; line-height: 1.2;">
+                                <li id="req-long"><i class="bi bi-x-circle-fill text-danger me-1"></i> Mín. 8 caracteres</li>
+                                <li id="req-mayus"><i class="bi bi-x-circle-fill text-danger me-1"></i> Una mayúscula</li>
+                                <li id="req-num"><i class="bi bi-x-circle-fill text-danger me-1"></i> Un número</li>
+                                <li id="req-simb"><i class="bi bi-x-circle-fill text-danger me-1"></i> Un símbolo (@, $, !)</li>
+                                <li id="req-sec" class="text-success"><i class="bi bi-check-circle-fill me-1"></i> Sin núm. consecutivos</li>
+                            </ul>
+                            <div class="text-danger fw-bold d-none mt-1" id="error_pass_match" style="font-size: 0.75rem;"><i class="bi bi-exclamation-triangle-fill me-1"></i>Las contraseñas no coinciden.</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end border-top pt-4 mt-3">
+                        <button type="submit" class="btn btn-dark btn-lg fw-bold px-5 rounded-pill shadow disabled" id="btnGuardar">
+                            <i class="bi bi-person-plus-fill me-2"></i>Guardar Expediente
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // -----------------------------------------------------------------
+        // 1. CONDICIONES MÉDICAS INTELIGENTES (SELECT2 TAGS)
+        // -----------------------------------------------------------------
+        if($.fn.select2) {
+            $('#sel_condiciones_medicas').select2({
+                theme: 'bootstrap-5',
+                placeholder: "Busque, seleccione o escriba una nueva...",
+                tags: true, // Permite crear nuevas opciones con Enter
+                tokenSeparators: [',']
+            });
+        }
+
+        // -----------------------------------------------------------------
+        // 2. CUENTA BANCARIA CON AUTO-FORMATO
+        // -----------------------------------------------------------------
+        const inputCuenta = document.getElementById('input_cuenta');
+        inputCuenta.addEventListener('input', function(e) {
+            let valor = this.value.replace(/\D/g, ''); // Solo números
+            valor = valor.replace(/(.{4})/g, '$1 ').trim(); // Bloques de 4
+            this.value = valor;
+        });
+
+        // -----------------------------------------------------------------
+        // 3. VALIDACIÓN DE CORREO ELECTRÓNICO (SIN OTP)
+        // -----------------------------------------------------------------
+        const inputEmail = document.getElementById('input_email');
+        inputEmail.addEventListener('input', function() {
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (this.value.length === 0) {
+                this.classList.remove('is-valid', 'is-invalid');
+            } else if (regex.test(this.value)) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            }
+        });
+
+        // -----------------------------------------------------------------
+        // 4. RESTRICCIÓN FÍSICA ESTRICTA DE DOCUMENTOS
+        // -----------------------------------------------------------------
+        const tipoDoc = document.getElementById('tipo_documento'); 
+        const numDoc = document.getElementById('numero_documento'); 
+        const docError = document.getElementById('doc_error');
+        
+        function validarDocumentoFisico() {
+            let valorActual = numDoc.value;
+            
+            if (tipoDoc.value === 'DNI') { 
+                // Corta físicamente en 8 y solo números
+                numDoc.value = valorActual.replace(/\D/g, '').substring(0, 8);
+                if (numDoc.value.length === 8) { 
+                    numDoc.classList.remove('is-invalid'); numDoc.classList.add('is-valid'); 
+                    docError.classList.add('d-none');
+                } else if (numDoc.value.length > 0) { 
+                    numDoc.classList.add('is-invalid'); numDoc.classList.remove('is-valid'); 
+                    docError.textContent = 'El DNI debe tener 8 números exactos.'; 
+                    docError.classList.remove('d-none');
+                } 
+            } else if (tipoDoc.value === 'CE') {
+                // Corta físicamente en 9 y permite letras/números
+                numDoc.value = valorActual.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().substring(0, 9);
+                if (numDoc.value.length === 9) { 
+                    numDoc.classList.remove('is-invalid'); numDoc.classList.add('is-valid'); 
+                    docError.classList.add('d-none');
+                } else if (numDoc.value.length > 0) { 
+                    numDoc.classList.add('is-invalid'); numDoc.classList.remove('is-valid'); 
+                    docError.textContent = 'El CE debe tener 9 caracteres exactos.'; 
+                    docError.classList.remove('d-none');
+                } 
+            } else { 
+                // Pasaporte corta físicamente en 12
+                numDoc.value = valorActual.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().substring(0, 12);
+                if (numDoc.value.length >= 6 && numDoc.value.length <= 12) { 
+                    numDoc.classList.remove('is-invalid'); numDoc.classList.add('is-valid'); 
+                    docError.classList.add('d-none');
+                } else if (numDoc.value.length > 0) { 
+                    numDoc.classList.add('is-invalid'); numDoc.classList.remove('is-valid'); 
+                    docError.textContent = 'El Pasaporte debe tener entre 6 y 12 caracteres.'; 
+                    docError.classList.remove('d-none');
+                } 
+            } 
+        }
+        
+        tipoDoc.addEventListener('change', function() { 
+            numDoc.value = ''; 
+            numDoc.classList.remove('is-valid', 'is-invalid'); 
+            docError.classList.add('d-none');
+            if(this.value === 'DNI') { numDoc.placeholder = "8 dígitos numéricos"; } 
+            else if(this.value === 'CE') { numDoc.placeholder = "9 caracteres alfanuméricos"; }
+            else { numDoc.placeholder = "Hasta 12 caracteres"; } 
+        });
+        numDoc.addEventListener('input', validarDocumentoFisico);
+
+        // -----------------------------------------------------------------
+        // TU CÓDIGO INTACTO DE LÓGICA DE NEGOCIO Y UBIGEO
+        // -----------------------------------------------------------------
+        const codPais = document.getElementById('cod_pais'); const inputTelefono = document.getElementById('input_telefono'); const telError = document.getElementById('tel_error');
+        function validarTelefono() { inputTelefono.value = inputTelefono.value.replace(/[^0-9]/g, ''); let valor = inputTelefono.value; let valid = false; if (codPais.value === '+51') { if (valor.length > 0 && valor[0] !== '9') inputTelefono.value = ''; inputTelefono.setAttribute('maxlength', '9'); valid = (valor.length === 9); telError.textContent = 'El celular en Perú debe empezar con 9 y tener 9 dígitos.'; } else { inputTelefono.setAttribute('maxlength', '10'); valid = (valor.length >= 8 && valor.length <= 10); telError.textContent = 'Ingrese un número válido para su país.'; } if (valid) { inputTelefono.classList.remove('is-invalid'); inputTelefono.classList.add('is-valid'); } else if (valor.length > 0) { inputTelefono.classList.add('is-invalid'); inputTelefono.classList.remove('is-valid'); } }
+        codPais.addEventListener('change', function() { inputTelefono.value = ''; inputTelefono.classList.remove('is-valid', 'is-invalid'); });
+        inputTelefono.addEventListener('input', validarTelefono);
+
+        const emTel = document.getElementById('em_telefono');
+        emTel.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            if (this.value.length === 9) { this.classList.remove('is-invalid'); this.classList.add('is-valid'); } 
+            else if (this.value.length > 0) { this.classList.add('is-invalid'); this.classList.remove('is-valid'); } 
+            else { this.classList.remove('is-invalid', 'is-valid'); }
+        });
+
+        const inputNombres = document.getElementById('input_nombres'); const inputPaterno = document.getElementById('input_paterno'); const inputUsuario = document.getElementById('input_usuario');
+        function generarUsuario() { const nom = inputNombres.value.trim().toLowerCase(); const pat = inputPaterno.value.trim().toLowerCase(); if (nom.length > 0 && pat.length > 0) { inputUsuario.value = nom.charAt(0) + pat; } }
+        inputNombres.addEventListener('input', generarUsuario); inputPaterno.addEventListener('input', generarUsuario);
+
+        const selCargo = document.getElementById('sel_cargo');
+        const selArea = document.getElementById('sel_area');
+        const inputExp = document.getElementById('input_experiencia');
+        const inputSueldo = document.getElementById('input_sueldo');
+        const selRolVisual = document.getElementById('sel_rol_visual');
+        const inputRolOculto = document.getElementById('input_rol_oculto');
+
+        const areasPorCargo = {
+            "Practicante de Mecánica": ["Mecánica / Reparación", "Repuestos / Almacén"],
+            "Recepcionista": ["Recepción / Atención al Cliente", "Administrativa"],
+            "Mecánico Técnico": ["Mecánica / Reparación", "Diagnóstico", "Frenos y Suspensión"],
+            "Electricista Automotriz": ["Electricidad Automotriz", "Diagnóstico"],
+            "Mecánico Principal (Maestro)": ["Diagnóstico", "Mecánica / Reparación", "Electricidad Automotriz"],
+            "Administrador": ["Gerencia", "Administrativa"]
+        };
+
+        const reglasSalariales = {
+            "Practicante de Mecánica": { base: 1050, bonoPorAño: 0 },
+            "Recepcionista": { base: 1200, bonoPorAño: 25 },
+            "Mecánico Técnico": { base: 1500, bonoPorAño: 60 },
+            "Electricista Automotriz": { base: 1650, bonoPorAño: 70 },
+            "Mecánico Principal (Maestro)": { base: 2200, bonoPorAño: 100 },
+            "Administrador": { base: 2800, bonoPorAño: 0 }
+        };
+
+        function actualizarSueldo() {
+            const cargo = selCargo.value;
+            const exp = parseInt(inputExp.value) || 0;
+            if (reglasSalariales[cargo]) {
+                inputSueldo.value = (reglasSalariales[cargo].base + (reglasSalariales[cargo].bonoPorAño * exp)).toFixed(2);
+            }
+        }
+
+        selCargo.addEventListener('change', function() {
+            const cargo = this.value;
+            
+            selArea.innerHTML = '<option value=\"\">Seleccione el área específica...</option>';
+            if (areasPorCargo[cargo]) {
+                areasPorCargo[cargo].forEach(area => selArea.add(new Option(area, area)));
+                selArea.disabled = false;
+            } else { selArea.disabled = true; }
+
+            if (cargo === "Practicante de Mecánica" || cargo === "Administrador") {
+                inputExp.value = 0; inputExp.readOnly = true; inputExp.classList.add('bg-secondary', 'bg-opacity-10', 'text-muted'); 
+            } else {
+                inputExp.readOnly = false; inputExp.classList.remove('bg-secondary', 'bg-opacity-10', 'text-muted');
+            }
+
+            let rolAsignado = "";
+            if (cargo === "Administrador") rolAsignado = "admin";
+            else if (cargo === "Recepcionista") rolAsignado = "cajero";
+            else if (cargo !== "") rolAsignado = "mecanico"; 
+            
+            selRolVisual.value = rolAsignado;
+            inputRolOculto.value = rolAsignado;
+            
+            if(rolAsignado !== "") {
+                selRolVisual.classList.replace('bg-secondary', 'bg-info');
+                selRolVisual.classList.replace('text-muted', 'text-dark');
+            }
+            actualizarSueldo();
+        });
+        
+        inputExp.addEventListener('input', actualizarSueldo);
+        
+        const inputPass = document.getElementById('input_password');
+        const inputConfirm = document.getElementById('input_password_confirm');
+        const btnGuardar = document.getElementById('btnGuardar');
+        const barra = document.getElementById('barra-seguridad');
+        const errorMatch = document.getElementById('error_pass_match');
+        let isSecure = false;
+
+        window.toggleVis = function(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.replace("bi-eye-slash-fill", "bi-eye-fill");
+                icon.classList.replace("text-muted", "text-primary");
+            } else {
+                input.type = "password";
+                icon.classList.replace("bi-eye-fill", "bi-eye-slash-fill");
+                icon.classList.replace("text-primary", "text-muted");
+            }
+        };
+
+        inputPass.addEventListener('input', validarSeguridad);
+        inputConfirm.addEventListener('input', validarSeguridad);
+
+        function validarSeguridad() {
+            const val = inputPass.value;
+            const valConfirm = inputConfirm.value;
+            let score = 0;
+            
+            const hasLong = val.length >= 8;
+            const hasMayus = /[A-Z]/.test(val);
+            const hasNum = /[0-9]/.test(val);
+            const hasSimb = /[\W_]/.test(val);
+            const hasConsecutive = /(012|123|234|345|456|567|678|789|890)/.test(val);
+
+            updateReq('req-long', hasLong); updateReq('req-mayus', hasMayus);
+            updateReq('req-num', hasNum); updateReq('req-simb', hasSimb);
+            
+            const reqSec = document.getElementById('req-sec');
+            if (hasConsecutive) {
+                reqSec.innerHTML = '<i class="bi bi-x-circle-fill text-danger me-1"></i> Números consecutivos (Inseguro)';
+                reqSec.classList.replace('text-success', 'text-danger');
+            } else {
+                reqSec.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i> Sin números consecutivos';
+                reqSec.classList.replace('text-danger', 'text-success');
+            }
+
+            if (hasLong) score++; if (hasMayus) score++; if (hasNum) score++; if (hasSimb) score++;
+
+            if (val.length === 0) { barra.style.width = '0%'; isSecure = false; } 
+            else if (hasConsecutive) { barra.style.width = '25%'; barra.className = 'progress-bar bg-danger'; isSecure = false; } 
+            else if (score <= 2) { barra.style.width = '33%'; barra.className = 'progress-bar bg-danger'; isSecure = false; } 
+            else if (score === 3) { barra.style.width = '66%'; barra.className = 'progress-bar bg-warning'; isSecure = false; } 
+            else if (score === 4) { barra.style.width = '100%'; barra.className = 'progress-bar bg-success'; isSecure = true; }
+            
+            let coinciden = false;
+            if (valConfirm !== "") {
+                if (val !== valConfirm) {
+                    inputConfirm.classList.add('is-invalid');
+                    inputConfirm.classList.remove('is-valid');
+                    errorMatch.classList.remove('d-none');
+                } else {
+                    inputConfirm.classList.remove('is-invalid');
+                    inputConfirm.classList.add('is-valid');
+                    errorMatch.classList.add('d-none');
+                    coinciden = true;
+                }
+            } else {
+                inputConfirm.classList.remove('is-invalid', 'is-valid');
+                errorMatch.classList.add('d-none');
+            }
+
+            if(isSecure && coinciden) btnGuardar.classList.remove('disabled');
+            else btnGuardar.classList.add('disabled');
+        }
+
+        function updateReq(id, isValid) {
+            const li = document.getElementById(id);
+            if (isValid) {
+                li.innerHTML = li.innerHTML.replace('bi-x-circle-fill text-danger', 'bi-check-circle-fill text-success');
+                li.classList.add('text-success'); li.classList.remove('text-muted');
+            } else {
+                li.innerHTML = li.innerHTML.replace('bi-check-circle-fill text-success', 'bi-x-circle-fill text-danger');
+                li.classList.remove('text-success'); li.classList.add('text-muted');
+            }
+        }
+
+        const form = document.getElementById('formNuevoUsuario');
+        form.addEventListener('submit', function(event) {
+            validarDocumentoFisico(); validarTelefono();
+            if (document.querySelectorAll('.is-invalid').length > 0 || !form.checkValidity() || !isSecure || inputPass.value !== inputConfirm.value) {
+                event.preventDefault(); event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+
+        // -----------------------------------------------------------------
+        // CALENDARIOS, RENIEC Y UBIGEO
+        // -----------------------------------------------------------------
+        if(document.getElementById("fecha_nacimiento")) {
+            flatpickr("#fecha_nacimiento", { locale: "es", dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", maxDate: "today", disableMobile: "true" });
+        }
+        if(document.getElementById("fecha_ingreso")) {
+            flatpickr("#fecha_ingreso", { locale: "es", dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", defaultDate: "today", disableMobile: "true" });
+        }
+
+        const btnBuscarDni = document.getElementById('btnBuscarDni');
+        if(btnBuscarDni) {
+            btnBuscarDni.addEventListener('click', async function() {
+                const dni = numDoc.value.trim();
+                if(dni.length !== 8) { alert("El DNI debe tener 8 dígitos para consultar."); numDoc.focus(); return; }
+                
+                const originalIcon = this.innerHTML;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                this.disabled = true;
+                
+                try {
+                    const response = await fetch('/api/consultar_documento', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tipo: 'DNI', numero: dni })
+                    });
+                    const data = await response.json();
+
+                    if(response.ok && data.success) {
+                        let partes = data.nombre.split(" ");
+                        if(partes.length >= 3) {
+                            document.getElementById('input_paterno').value = partes[partes.length - 2];
+                            document.getElementById('input_materno').value = partes[partes.length - 1];
+                            document.getElementById('input_nombres').value = partes.slice(0, partes.length - 2).join(" ");
+                        } else {
+                            document.getElementById('input_nombres').value = data.nombre; 
+                        }
+                        document.getElementById('input_nombres').dispatchEvent(new Event('input'));
+                    } else { alert(data.error || "No encontrado."); }
+                } catch (error) { alert("Error de conexión al servidor."); } finally { this.innerHTML = originalIcon; this.disabled = false; }
+            });
+        }
+
+        const ubigeoPeru = {
+            "Amazonas": { "Chachapoyas": ["Chachapoyas", "Huancas"], "Bagua": ["Bagua", "Aramango"] },
+            "Áncash": { "Huaraz": ["Huaraz", "Independencia"], "Santa": ["Chimbote", "Nuevo Chimbote", "Santa"] },
+            "Apurímac": { "Abancay": ["Abancay", "Tamburco"], "Andahuaylas": ["Andahuaylas", "San Jerónimo"] },
+            "Arequipa": { "Arequipa": ["Arequipa", "Cayma", "Cerro Colorado", "Miraflores", "Paucarpata", "Yanahuara"], "Camaná": ["Camaná", "Samuel Pastor"] },
+            "Ayacucho": { "Huamanga": ["Ayacucho", "Carmen Alto", "San Juan Bautista"], "Huanta": ["Huanta", "Luricocha"] },
+            "Cajamarca": { "Cajamarca": ["Cajamarca", "Baños del Inca"], "Jaén": ["Jaén", "Bellavista"] },
+            "Callao": { "Callao": ["Callao", "Bellavista", "Carmen de la Legua", "La Perla", "La Punta", "Ventanilla"] },
+            "Cusco": { "Cusco": ["Cusco", "San Jerónimo", "San Sebastián", "Wanchaq"], "Urubamba": ["Urubamba", "Ollantaytambo"] },
+            "Huancavelica": { "Huancavelica": ["Huancavelica", "Ascensión"], "Tayacaja": ["Pampas", "Daniel Hernández"] },
+            "Huánuco": { "Huánuco": ["Huánuco", "Amarilis"], "Leoncio Prado": ["Rupa-Rupa", "Castillo Grande"] },
+            "Ica": { "Ica": ["Ica", "La Tinguiña", "Parcona", "Subtanjalla"], "Chincha": ["Chincha Alta", "Pueblo Nuevo", "Sunampe"], "Pisco": ["Pisco", "San Andrés"], "Nasca": ["Nasca", "Marcona"] },
+            "Junín": { "Huancayo": ["Huancayo", "El Tambo", "Chilca"], "Chanchamayo": ["Chanchamayo", "Pichanaqui"] },
+            "La Libertad": { "Trujillo": ["Trujillo", "El Porvenir", "Florencia de Mora", "Víctor Larco Herrera"], "Ascope": ["Ascope", "Casa Grande"] },
+            "Lambayeque": { "Chiclayo": ["Chiclayo", "José Leonardo Ortiz", "La Victoria"], "Lambayeque": ["Lambayeque", "Olmos"] },
+            "Lima": { "Lima": ["Lima", "Ate", "Breña", "Comas", "Chorrillos", "La Molina", "Los Olivos", "Miraflores", "San Isidro", "San Juan de Lurigancho", "San Martín de Porres", "Santiago de Surco"], "Cañete": ["San Vicente de Cañete", "Mala"] },
+            "Loreto": { "Maynas": ["Iquitos", "Punchana", "Belén"], "Alto Amazonas": ["Yurimaguas"] },
+            "Madre de Dios": { "Tambopata": ["Tambopata", "Inambari"], "Manu": ["Manu"] },
+            "Moquegua": { "Mariscal Nieto": ["Moquegua", "Samegua"], "Ilo": ["Ilo", "Pacocha"] },
+            "Pasco": { "Pasco": ["Chaupimarca", "Yanacancha"], "Oxapampa": ["Oxapampa", "Villa Rica"] },
+            "Piura": { "Piura": ["Piura", "Castilla", "Catacaos"], "Sullana": ["Sullana", "Bellavista"], "Talara": ["Pariñas", "El Alto"] },
+            "Puno": { "Puno": ["Puno", "Ácora"], "San Román": ["Juliaca", "Caracoto"] },
+            "San Martín": { "San Martín": ["Tarapoto", "Morales"], "Moyobamba": ["Moyobamba", "Jepelacio"] },
+            "Tacna": { "Tacna": ["Tacna", "Alto de la Alianza", "Ciudad Nueva", "Gregorio Albarracín"], "Jorge Basadre": ["Locumba", "Ite"] },
+            "Tumbes": { "Tumbes": ["Tumbes", "Corrales"], "Zarumilla": ["Zarumilla", "Aguas Verdes"] },
+            "Ucayali": { "Coronel Portillo": ["Callería", "Yarinacocha"], "Padre Abad": ["Padre Abad", "Irazola"] }
+        };
+
+        const deptSelect = document.getElementById('sel_departamento');
+        const provSelect = document.getElementById('sel_provincia');
+        const distSelect = document.getElementById('sel_distrito');
+
+        if(deptSelect && provSelect && distSelect) {
+            for (let dept in ubigeoPeru) deptSelect.add(new Option(dept, dept));
+
+            deptSelect.addEventListener('change', function() {
+                provSelect.innerHTML = '<option value="" selected disabled>Seleccione Provincia...</option>';
+                distSelect.innerHTML = '<option value="" selected disabled>Seleccione Dist...</option>';
+                distSelect.disabled = true;
+                if(this.value) {
+                    provSelect.disabled = false;
+                    for (let prov in ubigeoPeru[this.value]) provSelect.add(new Option(prov, prov));
+                } else provSelect.disabled = true;
+            });
+
+            provSelect.addEventListener('change', function() {
+                distSelect.innerHTML = '<option value="" selected disabled>Seleccione Distrito...</option>';
+                if(this.value) {
+                    distSelect.disabled = false;
+                    ubigeoPeru[deptSelect.value][this.value].forEach(dist => distSelect.add(new Option(dist, dist)));
+                } else distSelect.disabled = true;
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Clientes - Virgen de Chapi{% endblock %}
+{% block active_clientes %}active{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilos vibrantes y modernos */
+    .kpi-card { border: none; border-radius: 20px; transition: transform 0.3s ease; overflow: hidden; }
+    .kpi-card:hover { transform: translateY(-5px); }
+    .bg-gradient-primary { background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); }
+    .bg-gradient-success { background: linear-gradient(135deg, #198754 0%, #146c43 100%); }
+    .bg-gradient-warning { background: linear-gradient(135deg, #ffc107 0%, #ffcd39 100%); }
+    .search-box { border-radius: 30px; border: 2px solid #e9ecef; transition: all 0.3s; }
+    .search-box:focus-within { border-color: #0d6efd; box-shadow: 0 5px 15px rgba(13,110,253,0.1); }
+    .table-hover tbody tr:hover { background-color: #f8faff; transition: background-color 0.2s; }
+    .badge-soft-primary { background-color: rgba(13,110,253,0.1); color: #0d6efd; font-weight: bold; padding: 6px 12px; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-dark m-0"><i class="bi bi-people-fill text-primary me-2"></i>Gestión de Clientes</h2>
+    <a href="/clientes/nuevo" class="btn btn-primary btn-lg fw-bold rounded-pill shadow-sm">
+        <i class="bi bi-person-plus-fill me-2"></i>Registrar Nuevo
+    </a>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="card kpi-card bg-gradient-primary text-white shadow">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-white-50 text-uppercase fw-bold mb-1">Total Clientes</h6>
+                    <h2 class="display-5 fw-bold m-0">{{ stats.total_clientes }}</h2>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3"><i class="bi bi-person-lines-fill fs-1"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card kpi-card bg-gradient-success text-white shadow">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-white-50 text-uppercase fw-bold mb-1">Total Vehículos</h6>
+                    <h2 class="display-5 fw-bold m-0">{{ stats.total_vehiculos }}</h2>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3"><i class="bi bi-car-front-fill fs-1"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card kpi-card bg-gradient-warning text-dark shadow">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-dark-50 text-uppercase fw-bold mb-1">Nuevos Hoy</h6>
+                    <h2 class="display-5 fw-bold m-0">{{ stats.nuevos_hoy }}</h2>
+                </div>
+                <div class="bg-dark bg-opacity-10 rounded-circle p-3"><i class="bi bi-graph-up-arrow fs-1"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-header bg-white p-4 border-bottom-0 rounded-top-4">
+        <div class="input-group search-box bg-white overflow-hidden p-1">
+            <span class="input-group-text bg-transparent border-0 text-primary fs-5"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control border-0 shadow-none fs-5" id="buscadorClientes" placeholder="Buscar por Nombre, DNI/RUC, o Teléfono..." onkeyup="filtrarTablaClientes()">
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 tabla-clientes">
+                <thead class="bg-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-4 py-3">Identidad</th>
+                        <th>Documento</th>
+                        <th>Contacto</th>
+                        <th class="text-center">Flota</th>
+                        <th class="text-center pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in clientes %}
+                    <tr>
+                        <td class="ps-4 py-3">
+                            <a href="/clientes/perfil/{{ c.id }}" class="text-decoration-none text-dark fw-bold d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-person-fill fs-5"></i>
+                                </div>
+                                {{ c.nombre_razon_social }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge-soft-primary rounded-pill">{{ c.dni_ruc }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark"><i class="bi bi-telephone-fill text-success me-2 small"></i>{{ c.telefono }}</div>
+                            <div class="small text-muted"><i class="bi bi-envelope-fill me-2"></i>{{ c.email or 'Sin correo' }}</div>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-dark rounded-pill fs-6 px-3">{{ c.total_vehiculos }} Autos</span>
+                        </td>
+                        <td class="text-center pe-4">
+                            <a href="/clientes/perfil/{{ c.id }}" class="btn btn-sm btn-light text-primary fw-bold shadow-sm rounded-pill px-3">Ver Perfil</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1 d-block mb-2"></i>No hay clientes registrados en el sistema.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function filtrarTablaClientes() {
+        let input = document.getElementById("buscadorClientes");
+        let filtro = input.value.toUpperCase();
+        let tr = document.querySelectorAll(".tabla-clientes tbody tr");
+        for (let i = 0; i < tr.length; i++) {
+            if (tr[i].getElementsByTagName("td").length > 1) {
+                let texto = tr[i].textContent || tr[i].innerText;
+                tr[i].style.display = texto.toUpperCase().indexOf(filtro) > -1 ? "" : "none";
+            }
+        }
+    }
+</script>
+{% endblock %}

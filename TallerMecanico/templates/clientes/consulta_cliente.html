@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiservicios Virgen de Chapi - Red de Talleres</title>
+    <!-- Bootstrap 5 y Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <style>
+        :root {
+            --primary: #0d6efd;
+            --primary-glow: rgba(13, 110, 253, 0.4);
+            --dark-bg: #0b1120;
+            --card-bg: #ffffff;
+        }
+        body { font-family: 'Poppins', sans-serif; background-color: #f4f7f6; scroll-behavior: smooth; overflow-x: hidden; }
+        
+        /* --- NAVBAR --- */
+        .navbar-custom { background-color: rgba(11, 17, 32, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
+        .nav-link { color: rgba(255,255,255,0.7) !important; font-weight: 500; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; transition: color 0.3s ease; }
+        .nav-link:hover { color: #38bdf8 !important; }
+        
+        /* --- HERO SECTION --- */
+        .hero-section {
+            background-image: linear-gradient(rgba(11, 17, 32, 0.8), rgba(11, 17, 32, 0.95)), url('https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?q=80&w=2074&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            padding: 13rem 0 16rem 0; /* MUCHO espacio para que el buscador no choque */
+            color: white;
+            position: relative;
+        }
+
+        /* --- BUSCADOR PREMIUM (FORMA DE PÍLDORA) --- */
+        .search-container { margin-top: -9rem; position: relative; z-index: 10; }
+        .search-glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 40px; /* Mas curvo */
+            padding: 3.5rem;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .input-search-custom {
+            height: 70px; font-size: 1.1rem; border-radius: 50px 0 0 50px; /* Píldora izquierda */
+            border: 2px solid #e2e8f0; border-right: none; background: #f8fafc;
+            padding-left: 35px; font-weight: 600; color: #1e293b;
+            transition: all 0.3s ease;
+        }
+        .input-search-custom:focus { box-shadow: none; border-color: var(--primary); background: #ffffff; }
+        
+        .btn-search-custom {
+            height: 70px; border-radius: 0 50px 50px 0; /* Píldora derecha */
+            padding: 0 45px; font-weight: 800; font-size: 1.1rem; letter-spacing: 1px;
+            background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%); color: white;
+            border: none; transition: all 0.3s ease;
+        }
+        .btn-search-custom:hover { background: linear-gradient(135deg, #0043a8 0%, #0d6efd 100%); box-shadow: 0 10px 20px var(--primary-glow); transform: translateX(3px); }
+
+        /* --- ESTADÍSTICAS EN MODO OSCURO (ROMPE LA MONOTONÍA) --- */
+        .stats-section { 
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #1e293b 100%); 
+            position: relative; padding: 6rem 0; color: white;
+        }
+        /* Patrón de puntos de fondo para verse tecnológico */
+        .stats-section::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 30px 30px; opacity: 0.5; pointer-events: none;
+        }
+        .counter-box { text-align: center; padding: 1.5rem; position: relative; z-index: 1; }
+        .counter-number { font-size: 4.5rem; font-weight: 900; color: #38bdf8; line-height: 1; text-shadow: 0 0 20px rgba(56,189,248,0.4); }
+        .counter-label { font-size: 0.9rem; font-weight: 700; color: #94a3b8; letter-spacing: 2px; margin-top: 1rem; text-transform: uppercase; }
+
+        /* --- SERVICIOS Y TESTIMONIOS (TARJETAS MODERNAS) --- */
+        .service-card {
+            background: var(--card-bg); border-radius: 24px; padding: 3rem 2rem; 
+            border: 1px solid #e2e8f0; border-top: 5px solid #e2e8f0; text-align: center; height: 100%;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+        }
+        /* Colores de acento arriba */
+        .card-blue { border-top-color: #0d6efd; }
+        .card-red { border-top-color: #dc3545; }
+        .card-green { border-top-color: #198754; }
+        
+        .service-card:hover { transform: translateY(-15px); box-shadow: 0 25px 50px rgba(0,0,0,0.1); }
+        .service-card:hover.card-blue { box-shadow: 0 25px 50px rgba(13,110,253,0.15); }
+        .service-card:hover.card-red { box-shadow: 0 25px 50px rgba(220,53,69,0.15); }
+        .service-card:hover.card-green { box-shadow: 0 25px 50px rgba(25,135,84,0.15); }
+
+        .service-icon { width: 90px; height: 90px; border-radius: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 1.5rem; transition: transform 0.3s ease; }
+        .service-card:hover .service-icon { transform: scale(1.1); }
+
+        .testimonial-card { background: var(--card-bg); border-radius: 24px; padding: 3rem 2.5rem; border: 1px solid #e2e8f0; height: 100%; transition: all 0.3s ease; position: relative; }
+        .testimonial-card:hover { box-shadow: 0 20px 40px rgba(0,0,0,0.05); transform: translateY(-5px); }
+        .quote-icon { color: #e2e8f0; font-size: 4rem; position: absolute; top: 20px; right: 30px; line-height: 1; }
+        .stars { color: #ffc107; font-size: 1.2rem; margin-bottom: 1rem; }
+
+        /* --- WHATSAPP FLOTANTE --- */
+        .float-wsp {
+            position: fixed; width: 65px; height: 65px; bottom: 30px; right: 30px;
+            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: #FFF; border-radius: 50%;
+            text-align: center; font-size: 32px; box-shadow: 0 10px 25px rgba(37, 211, 102, 0.5);
+            z-index: 1000; display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .float-wsp:hover { transform: scale(1.15) rotate(-10deg); color: white; }
+
+        /* --- TIMELINE DE RESULTADOS --- */
+        .result-card { background: #ffffff; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 15px 40px rgba(0,0,0,0.06); margin-bottom: 2rem; overflow: hidden; }
+        .license-plate { background-color: #f8fafc; border: 2px solid #cbd5e1; color: #1e293b; font-weight: 900; font-family: monospace; font-size: 1.8rem; padding: 8px 25px; border-radius: 12px; letter-spacing: 3px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .track-line { display: flex; justify-content: space-between; position: relative; margin-bottom: 2rem; }
+        .track-line::before { content: ""; position: absolute; top: 25px; left: 10%; right: 10%; height: 6px; background-color: #f1f5f9; border-radius: 10px; z-index: 1; }
+        .track-step { position: relative; z-index: 2; text-align: center; width: 25%; }
+        .step-icon { width: 56px; height: 56px; border-radius: 50%; background-color: #f1f5f9; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 12px auto; border: 6px solid #ffffff; transition: all 0.3s ease; }
+        .step-text { font-size: 0.85rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .track-step.completed .step-icon { background-color: #10b981; color: white; }
+        .track-step.completed .step-text { color: #10b981; }
+        .track-step.active .step-icon { background-color: #3b82f6; color: white; box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.2); }
+        .track-step.active .step-text { color: #3b82f6; }
+        .track-step.warning .step-icon { background-color: #ef4444; color: white; box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.2); }
+        .track-step.warning .step-text { color: #ef4444; }
+    </style>
+</head>
+<body>
+
+<!-- WHATSAPP FLOTANTE -->
+<a href="https://wa.me/51966633037?text=Hola,%20quisiera%20hacer%20una%20consulta%20sobre%20mi%20vehículo" class="float-wsp" target="_blank" title="Contáctanos">
+    <i class="bi bi-whatsapp"></i>
+</a>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-custom sticky-top py-3">
+    <div class="container">
+        <a class="navbar-brand text-white fw-black d-flex align-items-center" href="/">
+            <i class="bi bi-tools text-primary me-2 fs-3"></i> 
+            <span class="fs-4 text-uppercase" style="letter-spacing: 2px;">Virgen de Chapi</span>
+        </a>
+        <button class="navbar-toggler border-0 shadow-none text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <i class="bi bi-list fs-1"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item"><a class="nav-link px-3" href="#inicio">Inicio</a></li>
+                <li class="nav-item"><a class="nav-link px-3 text-info" href="#rastreo"><i class="bi bi-radar me-1"></i> Monitoreo</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="#servicios">Especialidades</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="#contacto">Contacto</a></li>
+            </ul>
+            <div class="d-flex mt-3 mt-lg-0">
+                <a href="/login" class="btn btn-outline-light rounded-pill px-4 fw-bold shadow-sm">
+                    <i class="bi bi-shield-lock-fill me-1"></i> Intranet Personal
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO SECTION -->
+<section id="inicio" class="hero-section text-center">
+    <div class="container">
+        <span class="badge bg-white text-dark rounded-pill px-4 py-2 mb-4 fw-bold shadow-lg animate__animated animate__fadeInDown" style="font-size: 0.9rem;">
+            <i class="bi bi-star-fill text-warning me-1"></i> Red de Talleres de Primer Nivel
+        </span>
+        <h1 class="display-3 fw-black mb-4 animate__animated animate__zoomIn" style="letter-spacing: -2px; text-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            Potencia, Seguridad y <br><span style="color: #38bdf8;">Precisión Técnica.</span>
+        </h1>
+        <p class="lead opacity-75 mx-auto animate__animated animate__fadeInUp" style="max-width: 750px; font-weight: 300;">
+            No dejamos nada al azar. Especialistas en diagnóstico computarizado y mantenimiento preventivo para flotas corporativas y vehículos particulares a nivel nacional.
+        </p>
+    </div>
+</section>
+
+<!-- SECCIÓN DE RASTREO (CENTRAL) -->
+<section id="rastreo" class="search-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-9 col-lg-10">
+                <div class="search-glass animate__animated animate__fadeInUp">
+                    <div class="text-center mb-4">
+                        <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-1 mb-2 fw-bold text-uppercase"><i class="bi bi-broadcast me-1"></i> En Tiempo Real</span>
+                        <h2 class="text-dark fw-black mb-2">Centro de Monitoreo</h2>
+                        <p class="text-muted fs-6 m-0">Ingresa la placa, DNI o RUC para verificar el estado de tu orden de trabajo.</p>
+                    </div>
+                    <!-- BUSCADOR PÍLDORA -->
+                    <form method="POST" action="/#resultados-rastreo" class="d-flex shadow-sm mt-4">
+                        <input type="text" name="busqueda" class="form-control input-search-custom" placeholder="Ej: A1C-456 o DNI del propietario" required autocomplete="off">
+                        <button type="submit" class="btn btn-search-custom">
+                            LOCALIZAR <i class="bi bi-arrow-right-short fs-3 align-middle ms-1"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- RESULTADOS DEL RASTREO -->
+<div id="resultados-rastreo" class="container pt-5 pb-5">
+    {% if error %}
+    <div class="row justify-content-center mt-4 mb-5">
+        <div class="col-md-8 text-center animate__animated animate__shakeX">
+            <div class="bg-white p-5 rounded-4 border shadow-sm">
+                <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex p-4 mb-3">
+                    <i class="bi bi-search text-danger display-4 m-0"></i>
+                </div>
+                <h3 class="fw-bold text-dark">Vehículo no encontrado</h3>
+                <p class="text-muted fs-5">{{ error }}</p>
+                <a href="/" class="btn btn-outline-secondary fw-bold px-4 rounded-pill mt-3">Limpiar búsqueda</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if ordenes %}
+        <div class="text-center mb-5 mt-4 animate__animated animate__fadeIn">
+            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-4 py-2 mb-2 fw-bold text-uppercase letter-spacing-1"><i class="bi bi-check-circle-fill me-1"></i> Consulta Exitosa</span>
+            <h2 class="fw-black text-dark display-6">Estado de Reparación</h2>
+        </div>
+
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-10">
+                {% for orden in ordenes %}
+                
+                {% set num_paso = 1 %}
+                {% if orden.estado == 'pendiente' %}{% set num_paso = 1 %}{% endif %}
+                {% if orden.estado == 'en_proceso' %}{% set num_paso = 2 %}{% endif %}
+                {% if orden.estado == 'esperando_repuesto' %}{% set num_paso = 2 %}{% endif %}
+                {% if orden.estado == 'finalizado' %}{% set num_paso = 3 %}{% endif %}
+                {% if orden.estado == 'entregado' %}{% set num_paso = 4 %}{% endif %}
+
+                <div class="result-card animate__animated animate__fadeInUp mb-5">
+                    <div class="bg-light border-bottom p-4 p-md-5 d-flex flex-wrap justify-content-between align-items-center gap-4">
+                        <div>
+                            <span class="text-muted fw-bold small text-uppercase d-block mb-1">Orden Oficial</span>
+                            <h2 class="fw-black m-0 text-dark"><i class="bi bi-hash text-primary"></i>{{ "%04d"|format(orden.orden_id) }}</h2>
+                        </div>
+                        <div class="text-center">
+                            <div class="license-plate">{{ orden.placa }}</div>
+                            <span class="badge bg-secondary mt-2 fw-bold fs-6 px-3 py-2 rounded-pill shadow-sm">{{ orden.marca }} {{ orden.modelo }}</span>
+                        </div>
+                        <div class="text-end text-start-md">
+                            <span class="text-muted fw-bold small text-uppercase d-block mb-1">Propietario Registrado</span>
+                            <h5 class="fw-bold m-0 text-dark"><i class="bi bi-person-bounding-box me-2 text-muted"></i>{{ orden.nombre_completo }}</h5>
+                        </div>
+                    </div>
+
+                    <div class="p-4 p-md-5">
+                        {% if orden.estado == 'esperando_repuesto' %}
+                        <div class="alert alert-danger bg-danger bg-opacity-10 border-danger border-opacity-25 rounded-4 p-4 d-flex align-items-center mb-5">
+                            <i class="bi bi-exclamation-triangle-fill display-4 text-danger me-4 animate__animated animate__pulse animate__infinite"></i>
+                            <div>
+                                <h4 class="fw-bold text-danger mb-1">Trabajo en Pausa</h4>
+                                <p class="mb-0 text-dark fw-medium fs-5">El mecánico reportó la falta de un repuesto crítico. El área logística se comunicará en breve.</p>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="timeline-container mt-4 mb-5">
+                            <div class="track-line">
+                                <div class="track-step {% if num_paso >= 1 %}completed{% endif %}">
+                                    <div class="step-icon"><i class="bi bi-clipboard2-check-fill"></i></div>
+                                    <div class="step-text">Ingresado</div>
+                                </div>
+                                <div class="track-step {% if num_paso > 2 %}completed{% elif num_paso == 2 and orden.estado != 'esperando_repuesto' %}active{% elif orden.estado == 'esperando_repuesto' %}warning{% endif %}">
+                                    <div class="step-icon">
+                                        {% if orden.estado == 'esperando_repuesto' %} <i class="bi bi-pause-circle-fill"></i> {% else %} <i class="bi bi-wrench-adjustable-circle"></i> {% endif %}
+                                    </div>
+                                    <div class="step-text">{% if orden.estado == 'esperando_repuesto' %}Pausado{% else %}Reparando{% endif %}</div>
+                                </div>
+                                <div class="track-step {% if num_paso > 3 %}completed{% elif num_paso == 3 %}active{% endif %}">
+                                    <div class="step-icon"><i class="bi bi-check-circle-fill"></i></div>
+                                    <div class="step-text">Finalizado</div>
+                                </div>
+                                <div class="track-step {% if num_paso == 4 %}completed{% endif %}">
+                                    <div class="step-icon"><i class="bi bi-key-fill"></i></div>
+                                    <div class="step-text">Entregado</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4 pt-4 border-top g-4">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center bg-light p-4 rounded-4 border">
+                                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3 me-3"><i class="bi bi-calendar-arrow-down fs-3"></i></div>
+                                    <div>
+                                        <p class="text-muted small fw-bold mb-0 text-uppercase">Ingreso al Taller</p>
+                                        <h5 class="fw-bold m-0 text-dark">{{ orden.fecha_ingreso.strftime('%d/%m/%Y - %I:%M %p') }}</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center bg-light p-4 rounded-4 border">
+                                    <div class="bg-success bg-opacity-10 text-success rounded-circle p-3 me-3"><i class="bi bi-flag-fill fs-3"></i></div>
+                                    <div>
+                                        <p class="text-muted small fw-bold mb-0 text-uppercase">Fecha Estimada</p>
+                                        <h5 class="fw-bold m-0 text-dark">{% if orden.fecha_promesa %}{{ orden.fecha_promesa.strftime('%d/%m/%Y') }}{% else %}Por evaluar{% endif %}</h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if orden.estado in ['finalizado', 'entregado'] and orden.diagnostico %}
+                        <div class="mt-5 bg-dark bg-opacity-10 rounded-4 p-4 p-md-5 border border-dark border-opacity-10">
+                            <h5 class="fw-black text-dark mb-3"><i class="bi bi-journal-text text-primary me-2"></i>Informe Técnico Oficial:</h5>
+                            <p class="mb-0 text-dark fw-medium" style="white-space: pre-wrap; font-size: 1.05rem; line-height: 1.8;">{{ orden.diagnostico }}</p>
+                        </div>
+                        {% if orden.estado == 'finalizado' %}
+                        <div class="alert alert-success mt-4 mb-0 p-4 border-0 border-start border-5 border-success shadow-sm d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill display-5 text-success me-4"></i>
+                            <div>
+                                <h4 class="fw-bold text-success mb-1">¡Su vehículo está listo para recoger!</h4>
+                                <p class="mb-0 text-dark fs-6">Acerquese al área de caja con su documento de identidad para proceder con la entrega de llaves.</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- ESTADÍSTICAS (BLOQUE OSCURO DE ALTO CONTRASTE) -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row justify-content-center g-4">
+            <div class="col-md-3 col-6 counter-box">
+                <div class="counter-number" data-target="1500">0</div>
+                <div class="counter-label">Vehículos Reparados</div>
+            </div>
+            <div class="col-md-3 col-6 counter-box border-start border-secondary border-opacity-25 d-none d-md-block">
+                <div class="counter-number" data-target="15">0</div>
+                <div class="counter-label">Años de Experiencia</div>
+            </div>
+            <div class="col-md-3 col-6 counter-box border-start border-secondary border-opacity-25 d-none d-md-block">
+                <div class="d-flex justify-content-center align-items-baseline">
+                    <div class="counter-number" data-target="100">0</div><span class="fs-1 fw-bold text-white opacity-50">%</span>
+                </div>
+                <div class="counter-label">Garantía Asegurada</div>
+            </div>
+            <div class="col-md-3 col-6 counter-box border-start border-secondary border-opacity-25">
+                <div class="counter-number" data-target="12">0</div>
+                <div class="counter-label">Mecánicos Expertos</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SECCIÓN DE SERVICIOS -->
+<section id="servicios" class="py-5" style="background-color: #f4f7f6;">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-black text-dark display-5">Centro de Especialidades</h2>
+            <p class="text-muted mt-3 fs-5">Tecnología automotriz aplicada al mantenimiento integral de tu vehículo.</p>
+        </div>
+        
+        <div class="row g-4 mt-2">
+            <div class="col-lg-4 col-md-6">
+                <!-- Tarjeta con borde Azul -->
+                <div class="service-card card-blue">
+                    <div class="service-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-cpu-fill"></i></div>
+                    <h4 class="fw-bold text-dark mb-3">Escaneo Computarizado</h4>
+                    <p class="text-muted mb-0">Lectura precisa de sensores, borrado de códigos Check Engine y reprogramación de módulos electrónicos con escáneres OEM.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <!-- Tarjeta con borde Rojo -->
+                <div class="service-card card-red">
+                    <div class="service-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-wrench-adjustable-circle"></i></div>
+                    <h4 class="fw-bold text-dark mb-3">Mecánica de Motor</h4>
+                    <p class="text-muted mb-0">Reparación completa (Overhaul), cambio de empaquetaduras, anillos, sincronización de fajas y diagnóstico de compresión.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <!-- Tarjeta con borde Verde -->
+                <div class="service-card card-green">
+                    <div class="service-icon bg-success bg-opacity-10 text-success"><i class="bi bi-ev-front-fill"></i></div>
+                    <h4 class="fw-bold text-dark mb-3">Frenos y Suspensión</h4>
+                    <p class="text-muted mb-0">Rectificado de discos, cambio de pastillas, amortiguadores, terminales de dirección y alineamiento láser tridimensional.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- TESTIMONIOS -->
+<section class="py-5 bg-white">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <span class="badge bg-light text-primary rounded-pill px-3 py-2 mb-2 fw-bold text-uppercase border">Testimonios</span>
+            <h2 class="fw-black text-dark display-6">Lo que dicen de nosotros</h2>
+        </div>
+        <div class="row g-4 mt-2">
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <i class="bi bi-quote quote-icon"></i>
+                    <div class="stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+                    <p class="fst-italic text-muted fw-medium fs-6">"Me encantó el sistema para ver cómo iba mi camioneta desde mi celular. Súper transparentes y honestos con los repuestos."</p>
+                    <div class="mt-4 pt-3 d-flex align-items-center">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 45px; height: 45px;">CM</div>
+                        <div>
+                            <h6 class="fw-bold m-0 text-dark">Carlos Mendoza</h6>
+                            <small class="text-muted">Propietario Toyota Hilux</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <i class="bi bi-quote quote-icon"></i>
+                    <div class="stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+                    <p class="fst-italic text-muted fw-medium fs-6">"El diagnóstico por computadora fue exacto. Otros talleres me hacían cambiar piezas por gusto, aquí fueron directo al fallo eléctrico."</p>
+                    <div class="mt-4 pt-3 d-flex align-items-center">
+                        <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 45px; height: 45px;">LR</div>
+                        <div>
+                            <h6 class="fw-bold m-0 text-dark">Luis Ramírez</h6>
+                            <small class="text-muted">Cliente Particular</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <i class="bi bi-quote quote-icon"></i>
+                    <div class="stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></div>
+                    <p class="fst-italic text-muted fw-medium fs-6">"Llevo la flota de mi empresa. Cumplen con las fechas de entrega y sus facturas electrónicas llegan al instante por el sistema."</p>
+                    <div class="mt-4 pt-3 d-flex align-items-center">
+                        <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 45px; height: 45px;"><i class="bi bi-building"></i></div>
+                        <div>
+                            <h6 class="fw-bold m-0 text-dark">Transportes SUR</h6>
+                            <small class="text-muted">Cliente Corporativo</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="contacto" class="text-white py-5" style="background-color: var(--dark-bg);">
+    <div class="container mt-4">
+        <div class="row g-4 mb-4">
+            <div class="col-lg-5">
+                <div class="d-flex align-items-center mb-4">
+                    <i class="bi bi-tools text-primary fs-2 me-3"></i>
+                    <h3 class="fw-black m-0 text-uppercase letter-spacing-1">Virgen de Chapi</h3>
+                </div>
+                <p class="text-white-50 pe-md-5 small lh-lg">
+                    Conducimos tus problemas hacia la solución. Transparencia, tecnología y calidad garantizada en cada servicio que brindamos a nivel nacional.
+                </p>
+            </div>
+            <div class="col-lg-3">
+                <h6 class="fw-bold mb-4 text-uppercase letter-spacing-1">Atención al Cliente</h6>
+                <ul class="list-unstyled text-white-50 small lh-lg">
+                    <li><i class="bi bi-telephone-fill text-primary me-2"></i> 966 633 037 / 056-523915</li>
+                    <li><i class="bi bi-envelope-fill text-primary me-2"></i> contacto@virgendechapi.com</li>
+                    <li><i class="bi bi-geo-alt-fill text-primary me-2"></i> Sede Principal:<br><span class="ms-4">Carretera a Puquio KM. 2.5</span></li>
+                </ul>
+            </div>
+            <div class="col-lg-4">
+                <h6 class="fw-bold mb-4 text-uppercase letter-spacing-1">Horario Operativo</h6>
+                <div class="p-3 rounded-4 border border-secondary border-opacity-25 small" style="background: rgba(255,255,255,0.03);">
+                    <div class="d-flex justify-content-between mb-3"><span class="text-white-50">Lunes a Viernes:</span><span class="fw-bold text-white">08:00 AM - 06:00 PM</span></div>
+                    <div class="d-flex justify-content-between mb-3"><span class="text-white-50">Sábados:</span><span class="fw-bold text-white">08:00 AM - 02:00 PM</span></div>
+                    <div class="d-flex justify-content-between"><span class="text-white-50">Domingos:</span><span class="badge bg-danger">CERRADO</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="border-top border-secondary border-opacity-25 pt-4 text-center mt-5">
+            <p class="mb-0 text-white-50 small fw-medium">&copy; 2026 Multiservicios Virgen de Chapi. Arquitectura de Software por Arturo Rivera Morales.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Script para animación de contadores -->
+<script>
+    const counters = document.querySelectorAll('.counter-number');
+    const speed = 200;
+
+    const animateCounters = () => {
+        counters.forEach(counter => {
+            const updateCount = () => {
+                const target = +counter.getAttribute('data-target');
+                const count = +counter.innerText;
+                const inc = target / speed;
+
+                if (count < target) {
+                    counter.innerText = Math.ceil(count + inc);
+                    setTimeout(updateCount, 1);
+                } else {
+                    counter.innerText = target;
+                }
+            };
+            updateCount();
+        });
+    }
+
+    let observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) { animateCounters(); observer.disconnect(); }
+        });
+    });
+    observer.observe(document.querySelector('.stats-section'));
+</script>
+
+</body>
+</html>
